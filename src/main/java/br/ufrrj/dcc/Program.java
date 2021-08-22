@@ -44,7 +44,7 @@ public class Program {
                 databasePassword = String.valueOf(properties.get("database_password"));
                 token = String.valueOf(properties.get("token"));
                 String timeout = String.valueOf(properties.get("timeout_seconds"));
-                String scheduler = String.valueOf(properties.get("check_status_seconds"));
+                String scheduler = String.valueOf(properties.get("scheduler_seconds"));
                 if (databaseName.equals("NULL") || databaseUsername.equals("NULL")
                         || databasePassword.equals("NULL") || token.equals("NULL")
                         || timeout.equals("NULL") || scheduler.equals("NULL")) {
