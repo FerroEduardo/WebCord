@@ -28,6 +28,8 @@ public class Program {
         final String databaseName;
         final String databaseUsername;
         final String databasePassword;
+        final int timeoutSeconds;
+        final int schedulerTimeRate;
         EntityManagerFactory factory = null;
         try {
             Path currentPath = new File(Program.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath().getParent();
@@ -41,9 +43,15 @@ public class Program {
                 databaseUsername = String.valueOf(properties.get("database_username"));
                 databasePassword = String.valueOf(properties.get("database_password"));
                 token = String.valueOf(properties.get("token"));
-                if (databaseName.equals("NULL") || databaseUsername.equals("NULL") || databasePassword.equals("NULL") || token.equals("NULL")) {
+                String timeout = String.valueOf(properties.get("timeout_seconds"));
+                String scheduler = String.valueOf(properties.get("check_status_seconds"));
+                if (databaseName.equals("NULL") || databaseUsername.equals("NULL")
+                        || databasePassword.equals("NULL") || token.equals("NULL")
+                        || timeout.equals("NULL") || scheduler.equals("NULL")) {
                     throw new IllegalStateException("Falha ao tentar obter os dados do arquivo: " + propertiesFileName);
                 }
+                timeoutSeconds = Integer.parseInt(timeout);
+                schedulerTimeRate = Integer.parseInt(scheduler);
             } else {
                 boolean success = propertiesPath.toFile().createNewFile();
                 if (success) {
@@ -52,6 +60,8 @@ public class Program {
                     properties.put("database_username", "NULL");
                     properties.put("database_password", "NULL");
                     properties.put("token", "NULL");
+                    properties.put("timeout_seconds", "NULL");
+                    properties.put("scheduler_seconds", "NULL");
 //                    properties.put("aaaaaaaaa", Arrays.toString(new Object[]{"aaaa", "bbb"}));
                     properties.store(Files.newOutputStream(propertiesPath), null);
                     throw new IllegalStateException(String.format("Preencha os dados do servidor no arquivo %s", propertiesFileName));
@@ -73,7 +83,7 @@ public class Program {
             jda.awaitReady();
             jda.getPresence().setActivity(Activity.of(Activity.ActivityType.WATCHING, "dcc.help"));
 
-            Moodle moodle = new Moodle(jda, factory);
+            Moodle moodle = new Moodle(jda, factory, timeoutSeconds, schedulerTimeRate);
         } catch (LoginException e) {
             System.out.println("Falha ao fazer login. Talvez o token esteja incorreto");
             e.printStackTrace();

@@ -3,7 +3,6 @@ package br.ufrrj.dcc.listeners;
 import br.ufrrj.dcc.entity.GuildInfo;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.OnlineStatus;
-import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.managers.Presence;
@@ -28,17 +27,21 @@ public class Moodle {
     private final EntityManagerFactory factory;
     private long timeMoodleOff;
     private MoodleStatus currentMoodleStatus = MoodleStatus.NONE;
+    private final int timeoutSeconds;
+    private final int schedulerTimeRate;
 
-    public Moodle(JDA jda, EntityManagerFactory factory) {
+    public Moodle(JDA jda, EntityManagerFactory factory, int timeoutSeconds, int schedulerTimeRate) {
         this.factory = factory;
         this.timeMoodleOff = 0L;
         this.jda = jda;
+        this.schedulerTimeRate = schedulerTimeRate;
+        this.timeoutSeconds = timeoutSeconds;
         initScheduler();
     }
 
     private void initScheduler() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(this::checkMoodleStatus, 60, 10, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::checkMoodleStatus, schedulerTimeRate, 10, TimeUnit.SECONDS);
     }
 
     public void checkMoodleStatus() {
@@ -46,7 +49,6 @@ public class Moodle {
         EntityManager manager = factory.createEntityManager();
         List<GuildInfo> guilds = manager.createQuery("SELECT g FROM GuildInfo AS g", GuildInfo.class).getResultList();
         manager.close();
-        int timeoutSeconds = 10;
         try {
             String moodleUrl = "https://www.dcc.ufrrj.br/moodle/login/index.php";
             HttpClient httpClient = HttpClient.newHttpClient();
@@ -107,7 +109,7 @@ public class Moodle {
                 }
                 currentMoodleStatus = MoodleStatus.TIMEOUT;
             }
-            System.out.println("Timeout(10s) ao tentar acessar o Moodle");
+            System.out.printf("Timeout(%ds) ao tentar acessar o Moodle%n", timeoutSeconds);
         } catch (Exception e) {
             currentMoodleStatus = MoodleStatus.ERROR;
             e.printStackTrace();
