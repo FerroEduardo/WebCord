@@ -1,0 +1,51 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group 'br.ufrrj.dcc'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        name 'm2-dv8tion'
+        url 'https://m2.dv8tion.net/releases'
+    }
+}
+
+application {
+    mainClass.set("br.ufrrj.dcc.Program")
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    compile ("net.dv8tion:JDA:4.3.0_277") {
+        exclude module: 'opus-java'
+    }
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.3'
+    implementation 'org.postgresql:postgresql:42.2.23'
+    implementation 'org.hibernate:hibernate-core:5.5.6.Final'
+}
+
+jar {
+    manifest {
+        attributes (
+                "Main-Class": application.getMainClass(),
+                "Multi-Release": true
+        )
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
