@@ -25,14 +25,14 @@ public class Moodle {
 
     final private JDA jda;
     private final EntityManagerFactory factory;
-    private long timeMoodleOff;
     private MoodleStatus currentMoodleStatus = MoodleStatus.NONE;
+    private int timeoutCount;
     private final int timeoutSeconds;
     private final int schedulerTimeRate;
 
     public Moodle(JDA jda, EntityManagerFactory factory, int timeoutSeconds, int schedulerTimeRate) {
         this.factory = factory;
-        this.timeMoodleOff = 0L;
+        this.timeoutCount = 0;
         this.jda = jda;
         this.schedulerTimeRate = schedulerTimeRate;
         this.timeoutSeconds = timeoutSeconds;
@@ -63,58 +63,61 @@ public class Moodle {
             System.out.println("Requisição concluída com sucesso");
             if (response.statusCode() == 200) {
                 if (currentMoodleStatus != MoodleStatus.ONLINE) {
-                    for (GuildInfo guildInfo : guilds) {
-                        long guildId = guildInfo.getGuildId();
-                        long guildChannelId = guildInfo.getGuildChannelId();
+                    guilds.parallelStream().forEach(guild -> {
+                        long guildId = guild.getGuildId();
+                        long guildChannelId = guild.getGuildChannelId();
                         Guild dccGuild = Objects.requireNonNull(jda.getGuildById(guildId));
                         TextChannel textChannel = Objects.requireNonNull(dccGuild.getTextChannelById(guildChannelId));
                         textChannel.sendMessage(String.format("Moodle online. Status code: %d%n", response.statusCode())).queue();
-                    }
+                    });
                     currentMoodleStatus = MoodleStatus.ONLINE;
                 }
+                timeoutCount = 0; // reset count number
                 System.out.printf("Moodle online. Status code: %d%n", response.statusCode());
             } else {
                 if (currentMoodleStatus != MoodleStatus.ERROR) {
-                    for (GuildInfo guildInfo : guilds) {
-                        long guildId = guildInfo.getGuildId();
-                        long guildChannelId = guildInfo.getGuildChannelId();
+                    guilds.parallelStream().forEach(guild -> {
+                        long guildId = guild.getGuildId();
+                        long guildChannelId = guild.getGuildChannelId();
                         Guild dccGuild = Objects.requireNonNull(jda.getGuildById(guildId));
                         TextChannel textChannel = Objects.requireNonNull(dccGuild.getTextChannelById(guildChannelId));
                         textChannel.sendMessage(String.format("Algo de errado aconteceu com o Moodle. Status code: %d%n", response.statusCode())).queue();
-                    }
+                    });
                     currentMoodleStatus = MoodleStatus.ERROR;
                 }
                 System.out.printf("Algo de errado aconteceu com o Moodle. Status code: %d%n", response.statusCode());
             }
         } catch (IllegalArgumentException e) {
             if (currentMoodleStatus != MoodleStatus.ERROR) {
-                for (GuildInfo guildInfo : guilds) {
-                    long guildId = guildInfo.getGuildId();
-                    long guildChannelId = guildInfo.getGuildChannelId();
+                guilds.parallelStream().forEach(guild -> {
+                    long guildId = guild.getGuildId();
+                    long guildChannelId = guild.getGuildChannelId();
                     Guild dccGuild = Objects.requireNonNull(jda.getGuildById(guildId));
                     TextChannel textChannel = Objects.requireNonNull(dccGuild.getTextChannelById(guildChannelId));
                     textChannel.sendMessage("URI informada está incorreta").queue();
-                }
+                });
                 currentMoodleStatus = MoodleStatus.ERROR;
             }
             System.out.println("URI informada está incorreta");
         } catch (HttpConnectTimeoutException e) {
             if (currentMoodleStatus != MoodleStatus.TIMEOUT) {
-                for (GuildInfo guildInfo : guilds) {
-                    long guildId = guildInfo.getGuildId();
-                    long guildChannelId = guildInfo.getGuildChannelId();
-                    Guild dccGuild = Objects.requireNonNull(jda.getGuildById(guildId));
-                    TextChannel textChannel = Objects.requireNonNull(dccGuild.getTextChannelById(guildChannelId));
-                    textChannel.sendMessage(String.format("Timeout(%ds) ao tentar acessar o Moodle", timeoutSeconds)).queue();
+                if ((timeoutCount == 3) || ((timeoutCount % 3) == 0)) {
+                    guilds.parallelStream().forEach(guild -> {
+                        long guildId = guild.getGuildId();
+                        long guildChannelId = guild.getGuildChannelId();
+                        Guild dccGuild = Objects.requireNonNull(jda.getGuildById(guildId));
+                        TextChannel textChannel = Objects.requireNonNull(dccGuild.getTextChannelById(guildChannelId));
+                        textChannel.sendMessage(String.format("Timeout (%ds) ao tentar acessar o Moodle", timeoutSeconds)).queue();
+                    });
+                    currentMoodleStatus = MoodleStatus.TIMEOUT;
                 }
-                currentMoodleStatus = MoodleStatus.TIMEOUT;
             }
-            System.out.printf("Timeout(%ds) ao tentar acessar o Moodle%n", timeoutSeconds);
+            timeoutCount++; // increment count number
+            System.out.printf("Timeout #%s(%ds) ao tentar acessar o Moodle%n", timeoutCount, timeoutSeconds);
         } catch (Exception e) {
             currentMoodleStatus = MoodleStatus.ERROR;
             e.printStackTrace();
         }
-
         presence.setStatus(currentMoodleStatus.onlineStatus);
     }
 
