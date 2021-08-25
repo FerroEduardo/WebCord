@@ -66,7 +66,6 @@ public class Moodle {
                     });
                     currentMoodleStatus = MoodleStatus.ONLINE;
                 }
-                timeoutCount = 0; // reset count number
                 System.out.printf("Moodle online. Status code: %d%n", response.statusCode());
             } else {
                 if (currentMoodleStatus != MoodleStatus.ERROR) {
@@ -78,6 +77,7 @@ public class Moodle {
                 }
                 System.out.printf("Algo de errado aconteceu com o Moodle. Status code: %d%n", response.statusCode());
             }
+            timeoutCount = 0; // reset count number
         } catch (IllegalArgumentException e) {
             if (currentMoodleStatus != MoodleStatus.ERROR) {
 //                guilds.parallelStream().forEach(guild -> {
@@ -89,14 +89,13 @@ public class Moodle {
             e.printStackTrace();
             System.out.println("URI informada está incorreta");
         } catch (HttpConnectTimeoutException e) {
-            if (currentMoodleStatus != MoodleStatus.TIMEOUT) {
-                if ((timeoutCount == 3) || ((timeoutCount % 3) == 0)) {
-                    guilds.parallelStream().forEach(guild -> {
-                        String message = String.format("Timeout (%ds) ao tentar acessar o Moodle", timeoutSeconds);
-                        guild.sendMessage(jda, message);
-                    });
-                    currentMoodleStatus = MoodleStatus.TIMEOUT;
-                }
+            if (currentMoodleStatus != MoodleStatus.TIMEOUT && timeoutCount == 3) {
+                guilds.parallelStream().forEach(guild -> {
+                    String message = String.format("Timeout (%ds) ao tentar acessar o Moodle", timeoutSeconds);
+                    guild.sendMessage(jda, message);
+                });
+                currentMoodleStatus = MoodleStatus.TIMEOUT;
+                timeoutCount = 0; // reset count number
             }
             e.printStackTrace();
             timeoutCount++; // increment count number
