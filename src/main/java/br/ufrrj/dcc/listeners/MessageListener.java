@@ -50,12 +50,18 @@ public class MessageListener extends ListenerAdapter {
                     });
         } else if (content.equals(COMMAND_PREFIX + "help")) {
             StringBuilder desctiptionStringBuilder = new StringBuilder();
+            desctiptionStringBuilder.append("Quando fico:\n" +
+                                            "Online - Tudo funcionando perfeitamente\n" +
+                                            "Ocupado - Algum serviço está fora do ar\n" +
+                                            "Invisível - Estou fora do ar");
             desctiptionStringBuilder.append("dcc.help - Comandos\n");
             desctiptionStringBuilder.append("dcc.ping - Ping\n");
             desctiptionStringBuilder.append("dcc.add - Adiciona canal atual para receber avisos\n");
             desctiptionStringBuilder.append("dcc.remove - Remove canal atual e deixa de receber avisos\n");
             desctiptionStringBuilder.append("dcc.invite - Convite do bot");
             EmbedBuilder eb = new EmbedBuilder();
+            eb.setTimestamp(event.getMessage().getTimeCreated());
+            eb.setAuthor(event.getAuthor().getAsTag());
             eb.setColor(new Color((int) (Math.random() * 0x1000000)));
             eb.setTitle("Comandos");
             eb.setDescription(desctiptionStringBuilder.toString());
