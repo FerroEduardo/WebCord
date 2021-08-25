@@ -156,18 +156,19 @@ public class MessageListener extends ListenerAdapter {
                     if (currentWebsiteStatus != WebsiteStatus.NONE) {
                         LocalDateTime latestStatusTime = webObserver.getLatestStatusTime();
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                        websiteStatusStringBuilder.append(String.format(
-                                "%s:\n" +
-                                "- Status: %s\n",
-                                name, currentWebsiteStatus.name()));
                         if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
                             websiteStatusStringBuilder.append(String.format(
-                                    "- Quantidade de Timeouts: %d\n",
-                                    webObserver.getTimeoutCount()));
+                                    "%s:\n" +
+                                    "- Status: %s\n" +
+                                    "- Quantidade de Timeouts: %d\n" +
+                                    "- Desde: %s\n\n",
+                                    name, currentWebsiteStatus.name(), webObserver.getTimeoutCount(), latestStatusTime.format(formatter)));
+                        } else {
+                            websiteStatusStringBuilder.append(String.format(
+                                    "%s:\n" +
+                                    "- Status: %s\n\n",
+                                    name, currentWebsiteStatus.name()));
                         }
-                        websiteStatusStringBuilder.append(String.format(
-                                "- Desde: %s\n\n",
-                                latestStatusTime.format(formatter)));
                     } else {
                         websiteStatusStringBuilder.append(String.format(
                                 "%s:\n" +
