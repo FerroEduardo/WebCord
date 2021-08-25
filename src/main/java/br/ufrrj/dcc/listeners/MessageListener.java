@@ -13,6 +13,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import java.awt.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +70,6 @@ public class MessageListener extends ListenerAdapter {
             descriptionStringBuilder.append("dcc.invite - Convite do bot");
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTimestamp(event.getMessage().getTimeCreated());
-            eb.setAuthor(event.getAuthor().getAsTag());
             eb.setColor(new Color((int) (Math.random() * 0x1000000)));
             eb.setTitle("Comandos");
             eb.setDescription(descriptionStringBuilder.toString());
@@ -150,11 +151,31 @@ public class MessageListener extends ListenerAdapter {
             } else {
                 StringBuilder websiteStatusStringBuilder = new StringBuilder();
                 webObservers.forEach((name, webObserver) -> {
-                    websiteStatusStringBuilder.append(String.format("%s - Status: %s\n", name, webObserver.getCurrentWebsiteStatus().name()));
+                    WebsiteStatus currentWebsiteStatus = webObserver.getCurrentWebsiteStatus();
+                    if (currentWebsiteStatus != WebsiteStatus.NONE) {
+                        LocalDateTime latestStatusTime = webObserver.getLatestStatusTime();
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                        websiteStatusStringBuilder.append(String.format(
+                                "%s:\n" +
+                                "- Status: %s\n",
+                                name, currentWebsiteStatus.name()));
+                        if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
+                            websiteStatusStringBuilder.append(String.format(
+                                    "- Quantidade de Timeouts: %d\n",
+                                    webObserver.getTimeoutCount()));
+                        }
+                        websiteStatusStringBuilder.append(String.format(
+                                "- Desde: %s\n\n",
+                                latestStatusTime.format(formatter)));
+                    } else {
+                        websiteStatusStringBuilder.append(String.format(
+                                "%s:\n" +
+                                "- Status: AGUARDE\n\n",
+                                name));
+                    }
                 });
                 EmbedBuilder eb = new EmbedBuilder();
                 eb.setTimestamp(event.getMessage().getTimeCreated());
-                eb.setAuthor(event.getAuthor().getAsTag());
                 eb.setColor(new Color((int) (Math.random() * 0x1000000)));
                 eb.setTitle("Site - Status");
                 eb.setDescription(websiteStatusStringBuilder.toString());
