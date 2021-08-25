@@ -7,6 +7,7 @@ import br.ufrrj.dcc.listeners.WebObserver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
 
 import javax.persistence.EntityManagerFactory;
@@ -39,6 +40,7 @@ public class Program {
 
             jda.awaitReady();
             jda.getPresence().setActivity(Activity.of(Activity.ActivityType.WATCHING, "dcc.help"));
+            jda.getPresence().setStatus(OnlineStatus.IDLE);
             int num_websites = properties.getWebsites().size();
             Map<String, WebObserver> webObservers = new HashMap<>();
             properties.getWebsites().forEach((name, url) -> webObservers.put(name, new WebObserver(jda, factory, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url)));
