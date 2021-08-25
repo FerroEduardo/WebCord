@@ -44,7 +44,11 @@ public class WebObserver {
         scheduler.scheduleAtFixedRate(this::checkWebsiteStatus, schedulerTimeRate, 10, TimeUnit.SECONDS);
     }
 
-    public void checkWebsiteStatus() {
+    public WebsiteStatus getCurrentWebsiteStatus() {
+        return currentWebsiteStatus;
+    }
+
+    private void checkWebsiteStatus() {
         Presence presence = jda.getPresence();
         EntityManager manager = factory.createEntityManager();
         List<GuildInfo> guilds = manager.createQuery("SELECT g FROM GuildInfo AS g", GuildInfo.class).getResultList();

@@ -13,6 +13,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import java.awt.*;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -21,9 +22,14 @@ public class MessageListener extends ListenerAdapter {
 
     public static final String COMMAND_PREFIX = "dcc.";
     private final EntityManagerFactory factory;
+    Map<String, WebObserver> webObservers;
 
     public MessageListener(EntityManagerFactory factory) {
         this.factory = factory;
+    }
+
+    public void setWebObservers(Map<String, WebObserver> webObservers) {
+        this.webObservers = webObservers;
     }
 
     @Override
@@ -49,22 +55,23 @@ public class MessageListener extends ListenerAdapter {
                         response.editMessageFormat("Pong: %d ms", System.currentTimeMillis() - time).queue();
                     });
         } else if (content.equals(COMMAND_PREFIX + "help")) {
-            StringBuilder desctiptionStringBuilder = new StringBuilder();
-            desctiptionStringBuilder.append("Quando fico:\n" +
+            StringBuilder descriptionStringBuilder = new StringBuilder();
+            descriptionStringBuilder.append("Quando fico:\n" +
                                             "Online - Tudo funcionando perfeitamente\n" +
                                             "Ocupado - Algum serviço está fora do ar\n" +
                                             "Invisível - Estou fora do ar");
-            desctiptionStringBuilder.append("dcc.help - Comandos\n");
-            desctiptionStringBuilder.append("dcc.ping - Ping\n");
-            desctiptionStringBuilder.append("dcc.add - Adiciona canal atual para receber avisos\n");
-            desctiptionStringBuilder.append("dcc.remove - Remove canal atual e deixa de receber avisos\n");
-            desctiptionStringBuilder.append("dcc.invite - Convite do bot");
+            descriptionStringBuilder.append("dcc.help - Comandos\n");
+            descriptionStringBuilder.append("dcc.ping - Ping\n");
+            descriptionStringBuilder.append("dcc.status - Estado atual dos sites cadastrados\n");
+            descriptionStringBuilder.append("dcc.add - Adiciona canal atual para receber avisos\n");
+            descriptionStringBuilder.append("dcc.remove - Remove canal atual e deixa de receber avisos\n");
+            descriptionStringBuilder.append("dcc.invite - Convite do bot");
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTimestamp(event.getMessage().getTimeCreated());
             eb.setAuthor(event.getAuthor().getAsTag());
             eb.setColor(new Color((int) (Math.random() * 0x1000000)));
             eb.setTitle("Comandos");
-            eb.setDescription(desctiptionStringBuilder.toString());
+            eb.setDescription(descriptionStringBuilder.toString());
             msg.reply(eb.build()).queue();
         } else if (content.equals(COMMAND_PREFIX + "add")) {
             Optional<Role> optionalRole = member.getRoles().stream().filter(role -> role.hasPermission(Permission.ADMINISTRATOR)).findFirst();
@@ -137,6 +144,22 @@ public class MessageListener extends ListenerAdapter {
             int permission = 2048;
             String link = String.format("https://discord.com/api/oauth2/authorize?client_id=%d&permissions=%d", clientId, permission) + "&scope=bot%20applications.commands";
             msg.reply("Convite: " + link).queue();
+        } else if (content.equals(COMMAND_PREFIX + "status")) {
+            if (webObservers == null) {
+                msg.reply("Aguarde um momento...").queue(deleteMessagesAfterTime);
+            } else {
+                StringBuilder websiteStatusStringBuilder = new StringBuilder();
+                webObservers.forEach((name, webObserver) -> {
+                    websiteStatusStringBuilder.append(String.format("%s - Status: %s\n", name, webObserver.getCurrentWebsiteStatus().name()));
+                });
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setTimestamp(event.getMessage().getTimeCreated());
+                eb.setAuthor(event.getAuthor().getAsTag());
+                eb.setColor(new Color((int) (Math.random() * 0x1000000)));
+                eb.setTitle("Site - Status");
+                eb.setDescription(websiteStatusStringBuilder.toString());
+                msg.reply(eb.build()).queue();
+            }
         }
     }
 }
