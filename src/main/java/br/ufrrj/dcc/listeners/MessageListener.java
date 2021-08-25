@@ -61,7 +61,7 @@ public class MessageListener extends ListenerAdapter {
             descriptionStringBuilder.append("Quando fico:\n" +
                                             "Online - Tudo funcionando perfeitamente\n" +
                                             "Ocupado - Algum serviço está fora do ar\n" +
-                                            "Invisível - Estou fora do ar");
+                                            "Invisível - Estou fora do ar\n\n");
             descriptionStringBuilder.append("dcc.help - Comandos\n");
             descriptionStringBuilder.append("dcc.ping - Ping\n");
             descriptionStringBuilder.append("dcc.status - Estado atual dos sites cadastrados\n");
