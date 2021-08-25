@@ -2,8 +2,8 @@ package br.ufrrj.dcc;
 
 import br.ufrrj.dcc.entity.ProgramProperties;
 import br.ufrrj.dcc.listeners.MessageListener;
-import br.ufrrj.dcc.listeners.Moodle;
 import br.ufrrj.dcc.listeners.ReadyListener;
+import br.ufrrj.dcc.listeners.WebObserver;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -60,8 +60,7 @@ public class Program {
 
             jda.awaitReady();
             jda.getPresence().setActivity(Activity.of(Activity.ActivityType.WATCHING, "dcc.help"));
-
-            Moodle moodle = new Moodle(jda, factory, properties.getTimeoutSeconds(), properties.getSchedulerSeconds());
+            properties.getWebsites().forEach((name, url) -> new WebObserver(jda, factory, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url));
         } catch (LoginException e) {
             System.out.println("Falha ao fazer login. Talvez o token esteja incorreto");
             e.printStackTrace();

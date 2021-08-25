@@ -2,6 +2,8 @@ package br.ufrrj.dcc.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.util.Map;
+
 public class ProgramProperties {
 
     private String databaseName;
@@ -10,6 +12,7 @@ public class ProgramProperties {
     private String token;
     private Integer timeoutSeconds;
     private Integer schedulerSeconds;
+    private Map<String, String> websites;
 
     public ProgramProperties() {
     }
@@ -62,8 +65,30 @@ public class ProgramProperties {
         this.schedulerSeconds = schedulerSeconds;
     }
 
+    public Map<String, String> getWebsites() {
+        return websites;
+    }
+
+    public void setWebsites(Map<String, String> websites) {
+        this.websites = websites;
+    }
+
     @JsonIgnore
     public boolean isOk() {
         return databaseName != null && databaseUsername != null && databasePassword != null && token != null && timeoutSeconds != null && schedulerSeconds != null;
     }
+
+    @Override
+    public String toString() {
+        return "ProgramProperties{" +
+                "databaseName='" + databaseName + '\'' +
+                ", databaseUsername='" + databaseUsername + '\'' +
+                ", databasePassword='" + databasePassword + '\'' +
+                ", token='" + token + '\'' +
+                ", timeoutSeconds=" + timeoutSeconds +
+                ", schedulerSeconds=" + schedulerSeconds +
+                ", websites=" + websites +
+                '}';
+    }
+
 }

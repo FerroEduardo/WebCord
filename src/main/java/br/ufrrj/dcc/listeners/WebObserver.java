@@ -2,7 +2,6 @@ package br.ufrrj.dcc.listeners;
 
 import br.ufrrj.dcc.entity.GuildInfo;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.managers.Presence;
 
 import javax.persistence.EntityManager;
@@ -18,105 +17,96 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class Moodle {
+public class WebObserver {
 
-    final private JDA jda;
+    private final JDA jda;
     private final EntityManagerFactory factory;
-    private MoodleStatus currentMoodleStatus = MoodleStatus.NONE;
+    private final String websiteName;
+    private final String url;
+    private WebsiteStatus currentWebsiteStatus = WebsiteStatus.NONE;
     private int timeoutCount;
     private final int timeoutSeconds;
     private final int schedulerTimeRate;
 
-    public Moodle(JDA jda, EntityManagerFactory factory, int timeoutSeconds, int schedulerTimeRate) {
-        this.factory = factory;
-        this.timeoutCount = 0;
+    public WebObserver(JDA jda, EntityManagerFactory factory, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url) {
         this.jda = jda;
-        this.schedulerTimeRate = schedulerTimeRate;
+        this.factory = factory;
         this.timeoutSeconds = timeoutSeconds;
+        this.schedulerTimeRate = schedulerTimeRate;
+        this.websiteName = websiteName;
+        this.url = url;
+        this.timeoutCount = 0;
         initScheduler();
     }
 
     private void initScheduler() {
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(this::checkMoodleStatus, schedulerTimeRate, 10, TimeUnit.SECONDS);
+        scheduler.scheduleAtFixedRate(this::checkWebsiteStatus, schedulerTimeRate, 10, TimeUnit.SECONDS);
     }
 
-    public void checkMoodleStatus() {
+    public void checkWebsiteStatus() {
         Presence presence = jda.getPresence();
         EntityManager manager = factory.createEntityManager();
         List<GuildInfo> guilds = manager.createQuery("SELECT g FROM GuildInfo AS g", GuildInfo.class).getResultList();
         manager.close();
         try {
-            String moodleUrl = "https://www.dcc.ufrrj.br/moodle/login/index.php";
             HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(new URI(moodleUrl))
+                    .uri(new URI(this.url))
                     .GET()
                     .timeout(Duration.ofSeconds(timeoutSeconds))
                     .build();
 
-            System.out.printf("Tentando fazer a requisição para %s%n", moodleUrl);
+            System.out.printf("Tentando fazer a requisição para %s%n", this.url);
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             System.out.println("Requisição concluída com sucesso");
             if (response.statusCode() == 200) {
-                if (currentMoodleStatus != MoodleStatus.ONLINE) {
+                if (currentWebsiteStatus != WebsiteStatus.ONLINE) {
                     guilds.parallelStream().forEach(guild -> {
-                        String message = String.format("Moodle online. Status code: %d%n", response.statusCode());
+                        String message = String.format("%s online. Status code: %d%n", websiteName, response.statusCode());
                         guild.sendMessage(jda, message);
                     });
-                    currentMoodleStatus = MoodleStatus.ONLINE;
+                    currentWebsiteStatus = WebsiteStatus.ONLINE;
                 }
-                System.out.printf("Moodle online. Status code: %d%n", response.statusCode());
+                System.out.printf("%s online. Status code: %d%n", websiteName, response.statusCode());
             } else {
-                if (currentMoodleStatus != MoodleStatus.ERROR) {
+                if (currentWebsiteStatus != WebsiteStatus.ERROR) {
                     guilds.parallelStream().forEach(guild -> {
-                        String message = String.format("Algo de errado aconteceu com o Moodle. Status code: %d%n", response.statusCode());
+                        String message = String.format("Algo de errado aconteceu com o %s. Status code: %d%n", websiteName, response.statusCode());
                         guild.sendMessage(jda, message);
                     });
-                    currentMoodleStatus = MoodleStatus.ERROR;
+                    currentWebsiteStatus = WebsiteStatus.ERROR;
                 }
-                System.out.printf("Algo de errado aconteceu com o Moodle. Status code: %d%n", response.statusCode());
+                System.out.printf("Algo de errado aconteceu com o %s. Status code: %d%n", websiteName, response.statusCode());
             }
             timeoutCount = 0; // reset count number
         } catch (IllegalArgumentException e) {
-            if (currentMoodleStatus != MoodleStatus.ERROR) {
+            if (currentWebsiteStatus != WebsiteStatus.ERROR) {
 //                guilds.parallelStream().forEach(guild -> {
 //                    String message = "URI informada está incorreta";
 //                    guild.sendMessage(jda, message);
 //                });
-                currentMoodleStatus = MoodleStatus.ERROR;
+                currentWebsiteStatus = WebsiteStatus.ERROR;
             }
             e.printStackTrace();
-            System.out.println("URI informada está incorreta");
+            System.out.printf("URI do %s está incorreta%n", websiteName);
         } catch (HttpConnectTimeoutException e) {
-            if (currentMoodleStatus != MoodleStatus.TIMEOUT && timeoutCount == 3) {
+            if (currentWebsiteStatus != WebsiteStatus.TIMEOUT && timeoutCount == 3) {
                 guilds.parallelStream().forEach(guild -> {
-                    String message = String.format("Timeout (%ds) ao tentar acessar o Moodle", timeoutSeconds);
+                    String message = String.format("Timeout (%ds) ao tentar acessar o %s", timeoutSeconds, websiteName);
                     guild.sendMessage(jda, message);
                 });
-                currentMoodleStatus = MoodleStatus.TIMEOUT;
+                currentWebsiteStatus = WebsiteStatus.TIMEOUT;
                 timeoutCount = 0; // reset count number
             }
             e.printStackTrace();
             timeoutCount++; // increment count number
-            System.out.printf("Timeout #%s(%ds) ao tentar acessar o Moodle%n", timeoutCount, timeoutSeconds);
+            System.out.printf("Timeout #%s(%ds) ao tentar acessar o %s%n", timeoutCount, timeoutSeconds, websiteName);
         } catch (Exception e) {
-            currentMoodleStatus = MoodleStatus.ERROR;
+            currentWebsiteStatus = WebsiteStatus.ERROR;
             e.printStackTrace();
         }
-        presence.setStatus(currentMoodleStatus.onlineStatus);
-    }
-
-    enum MoodleStatus {
-        ONLINE(OnlineStatus.ONLINE),
-        TIMEOUT(OnlineStatus.DO_NOT_DISTURB),
-        ERROR(OnlineStatus.DO_NOT_DISTURB),
-        NONE(OnlineStatus.DO_NOT_DISTURB);
-
-        private final OnlineStatus onlineStatus;
-        MoodleStatus(OnlineStatus onlineStatus) {
-            this.onlineStatus = onlineStatus;
-        }
+        presence.setStatus(currentWebsiteStatus.status);
     }
 
 }
