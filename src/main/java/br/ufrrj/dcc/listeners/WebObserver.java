@@ -12,6 +12,8 @@ import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -23,10 +25,11 @@ public class WebObserver {
     private final EntityManagerFactory factory;
     private final String websiteName;
     private final String url;
-    private WebsiteStatus currentWebsiteStatus = WebsiteStatus.NONE;
+    private WebsiteStatus currentWebsiteStatus;
     private int timeoutCount;
     private final int timeoutSeconds;
     private final int schedulerTimeRate;
+    private LocalDateTime latestStatusTime;
 
     public WebObserver(JDA jda, EntityManagerFactory factory, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url) {
         this.jda = jda;
@@ -36,6 +39,7 @@ public class WebObserver {
         this.websiteName = websiteName;
         this.url = url;
         this.timeoutCount = 0;
+        this.currentWebsiteStatus = WebsiteStatus.NONE;
         initScheduler();
     }
 
@@ -46,6 +50,14 @@ public class WebObserver {
 
     public WebsiteStatus getCurrentWebsiteStatus() {
         return currentWebsiteStatus;
+    }
+
+    public LocalDateTime getLatestStatusTime() {
+        return latestStatusTime;
+    }
+
+    public int getTimeoutCount() {
+        return timeoutCount;
     }
 
     private void checkWebsiteStatus() {
@@ -71,6 +83,7 @@ public class WebObserver {
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.ONLINE;
+                    latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
                 }
                 System.out.printf("%s online. Status code: %d%n", websiteName, response.statusCode());
             } else {
@@ -80,6 +93,7 @@ public class WebObserver {
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.ERROR;
+                    latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
                 }
                 System.out.printf("Algo de errado aconteceu com o %s. Status code: %d%n", websiteName, response.statusCode());
             }
@@ -91,6 +105,7 @@ public class WebObserver {
 //                    guild.sendMessage(jda, message);
 //                });
                 currentWebsiteStatus = WebsiteStatus.ERROR;
+                latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
             }
             e.printStackTrace();
             System.out.printf("URI do %s está incorreta%n", websiteName);
@@ -102,14 +117,15 @@ public class WebObserver {
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.TIMEOUT;
+                    latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
                 }
-                timeoutCount = 0; // reset count number
             }
             e.printStackTrace();
             timeoutCount++; // increment count number
             System.out.printf("Timeout #%s(%ds) ao tentar acessar o %s%n", timeoutCount, timeoutSeconds, websiteName);
         } catch (Exception e) {
             currentWebsiteStatus = WebsiteStatus.ERROR;
+            latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
             e.printStackTrace();
         }
         presence.setStatus(currentWebsiteStatus.status);
