@@ -91,12 +91,14 @@ public class WebObserver {
             e.printStackTrace();
             System.out.printf("URI do %s está incorreta%n", websiteName);
         } catch (HttpConnectTimeoutException e) {
-            if (currentWebsiteStatus != WebsiteStatus.TIMEOUT && timeoutCount == 3) {
-                guilds.parallelStream().forEach(guild -> {
-                    String message = String.format("Timeout (%ds) ao tentar acessar o %s", timeoutSeconds, websiteName);
-                    guild.sendMessage(jda, message);
-                });
-                currentWebsiteStatus = WebsiteStatus.TIMEOUT;
+            if (timeoutCount % 3 == 0) {
+                if (currentWebsiteStatus != WebsiteStatus.TIMEOUT) {
+                    guilds.parallelStream().forEach(guild -> {
+                        String message = String.format("Timeout (%ds) ao tentar acessar o %s", timeoutSeconds, websiteName);
+                        guild.sendMessage(jda, message);
+                    });
+                    currentWebsiteStatus = WebsiteStatus.TIMEOUT;
+                }
                 timeoutCount = 0; // reset count number
             }
             e.printStackTrace();
