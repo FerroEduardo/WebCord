@@ -7,6 +7,8 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.EntityManager;
@@ -21,6 +23,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class MessageListener extends ListenerAdapter {
+
+    private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
 
     public static final String COMMAND_PREFIX = "dcc.";
     private final EntityManagerFactory factory;
@@ -90,10 +94,10 @@ public class MessageListener extends ListenerAdapter {
                             .setMaxResults(1)
                             .getSingleResult();
                     if (singleResult != null) {
-                        throw new AlreadyExistsException("Canal já foi adicionado anteriormente");
+                        throw LOGGER.throwing(new AlreadyExistsException("Canal já foi adicionado anteriormente"));
                     }
                 } catch (NoResultException e) {
-//                    e.printStackTrace();
+                    LOGGER.trace(e);
                     GuildInfo guildInfo = new GuildInfo(guildId, channelId);
                     entityManager.getTransaction().begin();
                     entityManager.persist(guildInfo);
@@ -101,13 +105,10 @@ public class MessageListener extends ListenerAdapter {
                     entityManager.close();
                     msg.reply("Configurado com sucesso").queue(deleteMessagesAfterTime);
                 } catch (AlreadyExistsException e) {
-                    msg.reply(e.getMessage()).queue(message -> {
-                                message.delete().queueAfter(5, TimeUnit.SECONDS);
-                                msg.delete().queueAfter(5, TimeUnit.SECONDS);
-                            }
-                    );
+                    LOGGER.trace(e);
+                    msg.reply(e.getMessage()).queue(deleteMessagesAfterTime);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.trace(e);
                     msg.reply("Falha ao adicionar o canal").queue(deleteMessagesAfterTime);
                 }
             } else {
@@ -132,10 +133,10 @@ public class MessageListener extends ListenerAdapter {
                     entityManager.getTransaction().commit();
                     msg.reply("Canal removido com sucesso").queue(deleteMessagesAfterTime);
                 } catch (NoResultException e) {
-//                    e.printStackTrace();
+                    LOGGER.trace(e);
                     msg.reply("Parece que esse canal não está cadastrado").queue(deleteMessagesAfterTime);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    LOGGER.trace(e);
                     msg.reply("Falha ao remover o canal").queue(deleteMessagesAfterTime);
                 }
             } else {
