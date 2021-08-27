@@ -76,7 +76,7 @@ public class Program {
         String propertiesFileName = "dcc-bot.json";
         LOGGER.debug(String.format("Carregando arquivo de configurações '%s'", propertiesFileName));
         ProgramProperties properties;
-        Path currentPath = new File(Testes.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath().getParent();
+        Path currentPath = new File(Program.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath().getParent();
         Path propertiesPath = Paths.get(currentPath.toString(), File.separator, propertiesFileName);
         ObjectMapper mapper = new ObjectMapper();
 
