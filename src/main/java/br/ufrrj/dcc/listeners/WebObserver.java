@@ -82,6 +82,7 @@ public class WebObserver {
             LOGGER.info(String.format("Tentando fazer a requisição para %s", this.url));
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             LOGGER.info("Requisição concluída com sucesso");
+            timeoutCount = 0; // reset count number
             if (response.statusCode() == 200) {
                 if (currentWebsiteStatus != WebsiteStatus.ONLINE) {
                     guilds.parallelStream().forEach(guild -> {
@@ -103,7 +104,6 @@ public class WebObserver {
                 }
                 LOGGER.info(String.format("Algo de errado aconteceu com o %s. Status code: %d%n", websiteName, response.statusCode()));
             }
-            timeoutCount = 0; // reset count number
         } catch (IllegalArgumentException e) {
             if (currentWebsiteStatus != WebsiteStatus.ERROR) {
 //                guilds.parallelStream().forEach(guild -> {
@@ -116,10 +116,11 @@ public class WebObserver {
             LOGGER.trace(e);
             LOGGER.info(String.format("URI do %s está incorreta%n", websiteName));
         } catch (HttpConnectTimeoutException e) {
+            timeoutCount++; // increment count number
             if (timeoutCount % 3 == 0) {
                 if (currentWebsiteStatus != WebsiteStatus.TIMEOUT) {
                     guilds.parallelStream().forEach(guild -> {
-                        String message = String.format("Timeout #%s(%ds) ao tentar acessar o %s%n", timeoutCount, timeoutSeconds, websiteName);
+                        String message = String.format("Timeout (%ds) ao tentar acessar o %s%n", timeoutSeconds, websiteName);
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.TIMEOUT;
@@ -127,8 +128,7 @@ public class WebObserver {
                 }
             }
             LOGGER.trace(e);
-            timeoutCount++; // increment count number
-            LOGGER.info(String.format("Timeout #%s(%ds) ao tentar acessar o %s%n", timeoutCount, timeoutSeconds, websiteName));
+            LOGGER.info(String.format("Timeout (%ds) ao tentar acessar o %s%n", timeoutSeconds, websiteName));
         } catch (Exception e) {
             LOGGER.trace(e);
             currentWebsiteStatus = WebsiteStatus.ERROR;
