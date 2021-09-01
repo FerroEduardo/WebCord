@@ -49,6 +49,9 @@ public class Program {
             jda.awaitReady();
             jda.getPresence().setActivity(Activity.of(Activity.ActivityType.WATCHING, "dcc.help"));
             jda.getPresence().setStatus(OnlineStatus.IDLE);
+            LOGGER.info("Verificando existência de canais cadastrados no banco de dados");
+            Util.checkDatabaseDataIntegrity(jda, factory);
+
             LOGGER.debug("Inicializando WebObservers");
             Map<String, WebObserver> webObservers = new HashMap<>();
             properties.getWebsites().forEach((name, url) -> webObservers.put(name, new WebObserver(jda, factory, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url)));
