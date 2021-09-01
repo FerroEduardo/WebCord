@@ -36,11 +36,11 @@ public class Program {
 
             Map<String, Object> databaseProperties = getDatabaseProperties(properties);
 
-            LOGGER.debug("Inicializando 'EntityManagerFactory' para persistencia dos dados");
+            LOGGER.info("Inicializando 'EntityManagerFactory' para persistencia dos dados");
             EntityManagerFactory factory = Persistence.createEntityManagerFactory("dcc_bot", databaseProperties);
             MessageListener messageListener = new MessageListener(factory);
 
-            LOGGER.debug("Inicializando Build do JDA");
+            LOGGER.info("Inicializando JDA");
             jda = JDABuilder.createDefault(properties.getToken())
                     .addEventListeners(new ReadyListener())
                     .addEventListeners(messageListener)
@@ -52,32 +52,31 @@ public class Program {
             LOGGER.info("Verificando existência de canais cadastrados no banco de dados");
             Util.checkDatabaseDataIntegrity(jda, factory);
 
-            LOGGER.debug("Inicializando WebObservers");
+            LOGGER.info("Inicializando WebObservers");
             Map<String, WebObserver> webObservers = new HashMap<>();
             properties.getWebsites().forEach((name, url) -> webObservers.put(name, new WebObserver(jda, factory, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url)));
             messageListener.setWebObservers(webObservers);
         } catch (LoginException e) {
-            System.out.println("Falha ao fazer login. Talvez o token esteja incorreto");
-            e.printStackTrace();
+            LOGGER.error("Falha ao fazer login. Talvez o token esteja incorreto", e);
         } catch (IOException | URISyntaxException | InterruptedException e) {
-            e.printStackTrace();
+            LOGGER.error(e);
         }
     }
 
     private static Map<String, Object> getDatabaseProperties(ProgramProperties properties) {
-        LOGGER.debug("Carregando propriedades do banco de dados");
+        LOGGER.info("Carregando propriedades do banco de dados");
         Map<String, Object> databaseProperties = new HashMap<>();
         databaseProperties.put("javax.persistence.jdbc.url", "jdbc:postgresql://localhost:5432/" + properties.getDatabaseName());
         databaseProperties.put("javax.persistence.jdbc.user", properties.getDatabaseUsername());
         databaseProperties.put("javax.persistence.jdbc.password", properties.getDatabasePassword());
         databaseProperties.put("show_sql", false);
-        LOGGER.debug("Propriedades do banco de dados carregadas com suecsso");
+        LOGGER.info("Propriedades do banco de dados carregadas com sucesso");
         return databaseProperties;
     }
 
     private static ProgramProperties getProgramProperties() throws URISyntaxException, IOException {
         String propertiesFileName = "dcc-bot.json";
-        LOGGER.debug(String.format("Carregando arquivo de configurações '%s'", propertiesFileName));
+        LOGGER.info(String.format("Carregando arquivo de configurações '%s'", propertiesFileName));
         ProgramProperties properties;
         Path currentPath = new File(Program.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath().getParent();
         Path propertiesPath = Paths.get(currentPath.toString(), File.separator, propertiesFileName);
@@ -98,7 +97,7 @@ public class Program {
                 throw LOGGER.throwing(new IllegalStateException(String.format("Falha ao tentar criar o arquivo properties %s", propertiesFileName)));
             }
         }
-        LOGGER.debug("Arquivo de configurações carregado com sucesso");
+        LOGGER.info("Arquivo de configurações carregado com sucesso");
         return properties;
     }
 }

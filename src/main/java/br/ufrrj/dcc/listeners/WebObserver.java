@@ -79,30 +79,30 @@ public class WebObserver {
                     .timeout(Duration.ofSeconds(timeoutSeconds))
                     .build();
 
-            LOGGER.info(String.format("Tentando fazer a requisição para %s", this.url));
+            LOGGER.trace(String.format("Tentando fazer a requisição para %s", this.url));
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            LOGGER.info("Requisição concluída com sucesso");
+            LOGGER.trace(String.format("Requisição para %s foi concluída com sucesso", this.url));
             timeoutCount = 0; // reset count number
             if (response.statusCode() == 200) {
+                String message = String.format("%s online. Status code: %d%n", websiteName, response.statusCode());
                 if (currentWebsiteStatus != WebsiteStatus.ONLINE) {
                     guilds.parallelStream().forEach(guild -> {
-                        String message = String.format("%s online. Status code: %d%n", websiteName, response.statusCode());
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.ONLINE;
                     latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
                 }
-                LOGGER.info(String.format("%s online. Status code: %d", websiteName, response.statusCode()));
+                LOGGER.info(message);
             } else {
+                String message = String.format("Algo de errado aconteceu com o %s. Status code: %d%n", websiteName, response.statusCode());
                 if (currentWebsiteStatus != WebsiteStatus.ERROR) {
                     guilds.parallelStream().forEach(guild -> {
-                        String message = String.format("Algo de errado aconteceu com o %s. Status code: %d%n", websiteName, response.statusCode());
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.ERROR;
                     latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
                 }
-                LOGGER.info(String.format("Algo de errado aconteceu com o %s. Status code: %d%n", websiteName, response.statusCode()));
+                LOGGER.info(message);
             }
         } catch (IllegalArgumentException e) {
             if (currentWebsiteStatus != WebsiteStatus.ERROR) {
@@ -113,24 +113,22 @@ public class WebObserver {
                 currentWebsiteStatus = WebsiteStatus.ERROR;
                 latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
             }
-            LOGGER.trace(e);
-            LOGGER.info(String.format("URI do %s está incorreta%n", websiteName));
+            LOGGER.error(String.format("URI do %s está incorreta%n", websiteName), e);
         } catch (HttpConnectTimeoutException e) {
             timeoutCount++; // increment count number
+            String message = String.format("Timeout (%ds) ao tentar acessar o %s%n", timeoutSeconds, websiteName);
             if (timeoutCount % 3 == 0) {
                 if (currentWebsiteStatus != WebsiteStatus.TIMEOUT) {
                     guilds.parallelStream().forEach(guild -> {
-                        String message = String.format("Timeout (%ds) ao tentar acessar o %s%n", timeoutSeconds, websiteName);
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.TIMEOUT;
                     latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
                 }
             }
-            LOGGER.trace(e);
-            LOGGER.info(String.format("Timeout (%ds) ao tentar acessar o %s%n", timeoutSeconds, websiteName));
+            LOGGER.debug(message, e);
         } catch (Exception e) {
-            LOGGER.trace(e);
+            LOGGER.error(e);
             currentWebsiteStatus = WebsiteStatus.ERROR;
             latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
         }

@@ -131,6 +131,7 @@ public class MessageListener extends ListenerAdapter {
                     entityManager.getTransaction().begin();
                     entityManager.remove(singleResult);
                     entityManager.getTransaction().commit();
+                    entityManager.close();
                     msg.reply("Canal removido com sucesso").queue(deleteMessagesAfterTime);
                 } catch (NoResultException e) {
                     LOGGER.trace(e);
