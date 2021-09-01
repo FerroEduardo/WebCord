@@ -2,6 +2,7 @@ package com.ferroeduardo.webcord;
 
 import com.ferroeduardo.webcord.entity.GuildInfo;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
 import org.apache.logging.log4j.LogManager;
@@ -18,6 +19,12 @@ import java.util.Set;
 public class Util {
 
     private static final Logger LOGGER = LogManager.getLogger(Util.class);
+
+    public static String getInviteLink(JDA jda) {
+        long clientId = jda.getSelfUser().getIdLong();
+        int permission = Permission.MESSAGE_WRITE.getOffset();
+        return String.format("https://discord.com/api/oauth2/authorize?client_id=%d&permissions=%d", clientId, permission) + "&scope=bot%20applications.commands";
+    }
 
     public static void checkDatabaseDataIntegrity(JDA jda, EntityManagerFactory factory) {
         EntityManager manager = factory.createEntityManager();
