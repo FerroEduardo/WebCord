@@ -45,13 +45,13 @@ public class MessageListener extends ListenerAdapter {
         if (event.getAuthor().isBot()) {
             return;
         }
-        Message msg = event.getMessage();
-        ChannelType channelType = event.getChannelType();
-        MessageChannel messageChannel = event.getChannel();
-        User author = event.getAuthor();
-        String content = msg.getContentRaw();
+        final Message msg = event.getMessage();
+        final ChannelType channelType = event.getChannelType();
+        final MessageChannel messageChannel = event.getChannel();
+        final User author = event.getAuthor();
+        final String content = msg.getContentRaw();
 
-        Consumer<Message> deleteMessagesAfterTime = message -> {
+        final Consumer<Message> deleteMessagesAfterTime = message -> {
             message.delete().queueAfter(5, TimeUnit.SECONDS);
             msg.delete().queueAfter(5, TimeUnit.SECONDS);
         };
@@ -71,9 +71,9 @@ public class MessageListener extends ListenerAdapter {
                                             "Invisível - Estou fora do ar\n\n");
             descriptionStringBuilder.append("dcc.ping - Ping\n");
             descriptionStringBuilder.append("dcc.help - Comandos\n");
-            descriptionStringBuilder.append("dcc.invite - Convite do bot");
+            descriptionStringBuilder.append("dcc.invite - Convite do bot\n");
             descriptionStringBuilder.append("dcc.status - Estado atual dos sites cadastrados\n");
-            descriptionStringBuilder.append("Somente servidores---------------------------------------\n");
+            descriptionStringBuilder.append("\nSomente servidores---------------------------------------\n");
             descriptionStringBuilder.append("dcc.add - Adiciona canal atual para receber avisos\n");
             descriptionStringBuilder.append("dcc.remove - Remove canal atual e deixa de receber avisos\n");
             EmbedBuilder eb = new EmbedBuilder();
