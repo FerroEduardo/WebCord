@@ -1,4 +1,4 @@
-package br.ufrrj.dcc.listeners;
+package com.ferroeduardo.webcord.listener;
 
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.ReadyEvent;

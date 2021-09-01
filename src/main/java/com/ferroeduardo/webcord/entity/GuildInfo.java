@@ -1,7 +1,7 @@
-package br.ufrrj.dcc.entity;
+package com.ferroeduardo.webcord.entity;
 
-import br.ufrrj.dcc.exceptions.GuildNotFoundException;
-import br.ufrrj.dcc.exceptions.TextChannelNotFoundExists;
+import com.ferroeduardo.webcord.exception.GuildNotFoundException;
+import com.ferroeduardo.webcord.exception.TextChannelNotFoundExists;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;

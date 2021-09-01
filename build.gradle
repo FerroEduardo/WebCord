@@ -3,7 +3,7 @@ plugins {
     id 'application'
 }
 
-group 'br.ufrrj.dcc'
+group 'com.ferroeduardo.webcord'
 version '1.0-SNAPSHOT'
 
 repositories {
@@ -15,7 +15,7 @@ repositories {
 }
 
 application {
-    mainClass.set("br.ufrrj.dcc.Program")
+    mainClass.set("com.ferroeduardo.webcord.Program")
 }
 
 dependencies {

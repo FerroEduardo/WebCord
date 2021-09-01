@@ -4,13 +4,13 @@
       http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
              version="2.0">
 
-    <persistence-unit name="dcc_bot">
+    <persistence-unit name="webcord">
 
         <!-- provedor/implementacao do JPA -->
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
         <!-- entidades mapeadas -->
-        <class>br.ufrrj.dcc.entity.GuildInfo</class>
+        <class>com.ferroeduardo.webcord.entity.GuildInfo</class>
 
         <properties>
             <!-- dados da conexao -->

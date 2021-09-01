@@ -1,6 +1,6 @@
-package br.ufrrj.dcc;
+package com.ferroeduardo.webcord;
 
-import br.ufrrj.dcc.entity.GuildInfo;
+import com.ferroeduardo.webcord.entity.GuildInfo;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;

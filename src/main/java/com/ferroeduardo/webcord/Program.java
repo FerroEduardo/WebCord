@@ -1,10 +1,10 @@
-package br.ufrrj.dcc;
+package com.ferroeduardo.webcord;
 
-import br.ufrrj.dcc.entity.ProgramProperties;
-import br.ufrrj.dcc.listeners.MessageListener;
-import br.ufrrj.dcc.listeners.ReadyListener;
-import br.ufrrj.dcc.listeners.WebObserver;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ferroeduardo.webcord.entity.ProgramProperties;
+import com.ferroeduardo.webcord.listener.MessageListener;
+import com.ferroeduardo.webcord.listener.ReadyListener;
+import com.ferroeduardo.webcord.listener.WebObserver;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -37,7 +37,7 @@ public class Program {
             Map<String, Object> databaseProperties = getDatabaseProperties(properties);
 
             LOGGER.info("Inicializando 'EntityManagerFactory' para persistencia dos dados");
-            EntityManagerFactory factory = Persistence.createEntityManagerFactory("dcc_bot", databaseProperties);
+            EntityManagerFactory factory = Persistence.createEntityManagerFactory("webcord", databaseProperties);
             MessageListener messageListener = new MessageListener(factory);
 
             LOGGER.info("Inicializando JDA");
@@ -47,7 +47,7 @@ public class Program {
                     .build();
 
             jda.awaitReady();
-            jda.getPresence().setActivity(Activity.of(Activity.ActivityType.WATCHING, "dcc.help"));
+            jda.getPresence().setActivity(Activity.of(Activity.ActivityType.WATCHING, MessageListener.COMMAND_PREFIX + "help"));
             jda.getPresence().setStatus(OnlineStatus.IDLE);
             LOGGER.info("Verificando existência de canais cadastrados no banco de dados");
             Util.checkDatabaseDataIntegrity(jda, factory);
@@ -75,7 +75,7 @@ public class Program {
     }
 
     private static ProgramProperties getProgramProperties() throws URISyntaxException, IOException {
-        String propertiesFileName = "dcc-bot.json";
+        String propertiesFileName = "webcord.json";
         LOGGER.info(String.format("Carregando arquivo de configurações '%s'", propertiesFileName));
         ProgramProperties properties;
         Path currentPath = new File(Program.class.getProtectionDomain().getCodeSource().getLocation().toURI()).toPath().getParent();

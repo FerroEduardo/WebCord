@@ -1,4 +1,4 @@
-package br.ufrrj.dcc.exceptions;
+package com.ferroeduardo.webcord.exception;
 
 public class AlreadyExistsException extends Exception {
     public AlreadyExistsException(String message) {

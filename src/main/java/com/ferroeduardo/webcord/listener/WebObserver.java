@@ -1,6 +1,6 @@
-package br.ufrrj.dcc.listeners;
+package com.ferroeduardo.webcord.listener;
 
-import br.ufrrj.dcc.entity.GuildInfo;
+import com.ferroeduardo.webcord.entity.GuildInfo;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.managers.Presence;
 import org.apache.logging.log4j.LogManager;

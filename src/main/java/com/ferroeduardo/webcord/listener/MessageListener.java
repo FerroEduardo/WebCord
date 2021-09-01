@@ -1,7 +1,7 @@
-package br.ufrrj.dcc.listeners;
+package com.ferroeduardo.webcord.listener;
 
-import br.ufrrj.dcc.entity.GuildInfo;
-import br.ufrrj.dcc.exceptions.AlreadyExistsException;
+import com.ferroeduardo.webcord.entity.GuildInfo;
+import com.ferroeduardo.webcord.exception.AlreadyExistsException;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
@@ -26,9 +26,9 @@ public class MessageListener extends ListenerAdapter {
 
     private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
 
-    public static final String COMMAND_PREFIX = "dcc.";
+    public static final String COMMAND_PREFIX = "webcord.";
     private final EntityManagerFactory factory;
-    Map<String, WebObserver> webObservers;
+    private Map<String, WebObserver> webObservers;
 
     public MessageListener(EntityManagerFactory factory) {
         this.factory = factory;

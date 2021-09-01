@@ -1,4 +1,4 @@
-package br.ufrrj.dcc.entity;
+package com.ferroeduardo.webcord.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
