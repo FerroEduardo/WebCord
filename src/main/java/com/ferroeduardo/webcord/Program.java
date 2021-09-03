@@ -9,6 +9,7 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -41,14 +42,15 @@ public class Program {
             MessageListener messageListener = new MessageListener(factory);
 
             LOGGER.info("Inicializando JDA");
-            jda = JDABuilder.createDefault(properties.getToken())
+            jda = JDABuilder.createLight(properties.getToken())
+                    .setEnabledIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
                     .addEventListeners(new ReadyListener())
                     .addEventListeners(messageListener)
+                    .setActivity(Activity.of(Activity.ActivityType.WATCHING, MessageListener.COMMAND_PREFIX + "help"))
+                    .setStatus(OnlineStatus.IDLE)
                     .build();
 
             jda.awaitReady();
-            jda.getPresence().setActivity(Activity.of(Activity.ActivityType.WATCHING, MessageListener.COMMAND_PREFIX + "help"));
-            jda.getPresence().setStatus(OnlineStatus.IDLE);
             LOGGER.info("Verificando existência de canais cadastrados no banco de dados");
             Util.checkDatabaseDataIntegrity(jda, factory);
 
