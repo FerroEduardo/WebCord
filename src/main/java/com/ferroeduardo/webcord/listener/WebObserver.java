@@ -10,9 +10,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -114,7 +114,7 @@ public class WebObserver {
                 latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
             }
             LOGGER.error(String.format("URI do %s está incorreta", websiteName), e);
-        } catch (HttpConnectTimeoutException e) {
+        } catch (HttpTimeoutException e) {
             timeoutCount++; // increment count number
             String message = String.format("Timeout (%ds) ao tentar acessar o %s", timeoutSeconds, websiteName);
             if (timeoutCount % 3 == 0) {
@@ -128,7 +128,7 @@ public class WebObserver {
             }
             LOGGER.debug(message, e);
         } catch (Exception e) {
-            LOGGER.error(e);
+            LOGGER.error(e.getMessage(), e);
             currentWebsiteStatus = WebsiteStatus.ERROR;
             latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
         }
