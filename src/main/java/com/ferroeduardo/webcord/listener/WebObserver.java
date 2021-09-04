@@ -116,8 +116,9 @@ public class WebObserver {
             LOGGER.error(String.format("URI do %s está incorreta", websiteName), e);
         } catch (HttpTimeoutException e) {
             timeoutCount++; // increment count number
-            String message = String.format("Timeout (%ds) ao tentar acessar o %s", timeoutSeconds, websiteName);
-            if (timeoutCount % 3 == 0) {
+            int tentativas = 3; // tentativas necessárias para detectar timeout
+            String message = String.format("Timeout (%ds) após %d tentativas de acessar o %s", timeoutSeconds, tentativas, websiteName);
+            if (timeoutCount % tentativas == 0) {
                 if (currentWebsiteStatus != WebsiteStatus.TIMEOUT) {
                     guilds.parallelStream().forEach(guild -> {
                         guild.sendMessage(jda, message);
