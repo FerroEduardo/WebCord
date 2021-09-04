@@ -50,6 +50,11 @@ public class Program {
                     .setStatus(OnlineStatus.IDLE)
                     .build();
 
+            jda.upsertCommand("help", "Ajuda").queue();
+            jda.upsertCommand("ping", "Pong").queue();
+            jda.upsertCommand("invite", "Convite do bot").queue();
+            jda.upsertCommand("status", "Estado atual dos sites").queue();
+
             jda.awaitReady();
             LOGGER.info("Verificando existência de canais cadastrados no banco de dados");
             Util.checkDatabaseDataIntegrity(jda, factory);

@@ -4,8 +4,10 @@ import com.ferroeduardo.webcord.Util;
 import com.ferroeduardo.webcord.entity.GuildInfo;
 import com.ferroeduardo.webcord.exception.AlreadyExistsException;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.apache.logging.log4j.LogManager;
@@ -63,19 +65,7 @@ public class MessageListener extends ListenerAdapter {
                         response.editMessageFormat("Pong: %d ms", System.currentTimeMillis() - time).queue();
                     });
         } else if (content.equals(COMMAND_PREFIX + "help")) {
-            StringBuilder descriptionStringBuilder = new StringBuilder();
-            descriptionStringBuilder.append("Quando fico:\n" +
-                                            "Online - Tudo funcionando perfeitamente\n" +
-                                            "Ocupado - Algum serviço está fora do ar\n" +
-                                            "Ausente - Inicializando bot\n" +
-                                            "Invisível - Estou fora do ar\n\n");
-            descriptionStringBuilder.append("dcc.ping - Ping\n");
-            descriptionStringBuilder.append("dcc.help - Comandos\n");
-            descriptionStringBuilder.append("dcc.invite - Convite do bot\n");
-            descriptionStringBuilder.append("dcc.status - Estado atual dos sites cadastrados\n");
-            descriptionStringBuilder.append("\nSomente servidores---------------------------------------\n");
-            descriptionStringBuilder.append("dcc.add - Adiciona canal atual para receber avisos\n");
-            descriptionStringBuilder.append("dcc.remove - Remove canal atual e deixa de receber avisos\n");
+            StringBuilder descriptionStringBuilder = getHelpStringBuilder();
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTimestamp(event.getMessage().getTimeCreated());
             eb.setColor(new Color((int) (Math.random() * 0x1000000)));
@@ -191,6 +181,84 @@ public class MessageListener extends ListenerAdapter {
                 } else {
                     msg.reply("Você não é um administrador para poder realizar essa ação").queue(deleteMessagesAfterTime);
                 }
+            }
+        }
+    }
+
+    private StringBuilder getHelpStringBuilder() {
+        StringBuilder descriptionStringBuilder = new StringBuilder();
+        descriptionStringBuilder.append("Quando fico:\n" +
+                                        "Online - Tudo funcionando perfeitamente\n" +
+                                        "Ocupado - Algum serviço está fora do ar\n" +
+                                        "Ausente - Inicializando bot\n" +
+                                        "Invisível - Estou fora do ar\n\n");
+        descriptionStringBuilder.append(String.format("%s.ping - Ping\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%s.help - Comandos\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%s.invite - Convite do bot\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%s.status - Estado atual dos sites cadastrados\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append("\nSomente servidores---------------------------------------\n");
+        descriptionStringBuilder.append(String.format("%s.add - Adiciona canal atual para receber avisos\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%s.remove - Remove canal atual e deixa de receber avisos\n", COMMAND_PREFIX));
+        return descriptionStringBuilder;
+    }
+
+    @Override
+    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+        String eventName = event.getName();
+        if (eventName.equals("help")) {
+            StringBuilder descriptionStringBuilder = getHelpStringBuilder();
+            EmbedBuilder eb = new EmbedBuilder();
+            eb.setTimestamp(event.getTimeCreated());
+            eb.setColor(new Color((int) (Math.random() * 0x1000000)));
+            eb.setTitle("Ajuda");
+            eb.setDescription(descriptionStringBuilder.toString());
+            MessageBuilder mb = new MessageBuilder(eb);
+            event.reply(mb.build()).queue();
+        } else if (eventName.equals("ping")) {
+            long time = System.currentTimeMillis();
+            event.reply("Pong!")
+                    .queue(response -> {
+                        response.editOriginal(String.format("Pong: %d ms", System.currentTimeMillis() - time)).queue();
+                    });
+        } else if (eventName.equals("invite")) {
+            event.reply(Util.getInviteLink(event.getJDA())).queue();
+        } else if (eventName.equals("status")) {
+            if (webObservers == null) {
+                event.reply("Aguarde um momento...").queue();
+            } else {
+                StringBuilder websiteStatusStringBuilder = new StringBuilder();
+                webObservers.forEach((name, webObserver) -> {
+                    WebsiteStatus currentWebsiteStatus = webObserver.getCurrentWebsiteStatus();
+                    if (currentWebsiteStatus != WebsiteStatus.NONE) {
+                        LocalDateTime latestStatusTime = webObserver.getLatestStatusTime();
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                        if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
+                            websiteStatusStringBuilder.append(String.format(
+                                    "%s:\n" +
+                                            "- Status: %s\n" +
+                                            "- Quantidade de Timeouts: %d\n" +
+                                            "- Desde: %s\n\n",
+                                    name, currentWebsiteStatus.name(), webObserver.getTimeoutCount(), latestStatusTime.format(formatter)));
+                        } else {
+                            websiteStatusStringBuilder.append(String.format(
+                                    "%s:\n" +
+                                            "- Status: %s\n\n",
+                                    name, currentWebsiteStatus.name()));
+                        }
+                    } else {
+                        websiteStatusStringBuilder.append(String.format(
+                                "%s:\n" +
+                                        "- Status: AGUARDE\n\n",
+                                name));
+                    }
+                });
+                EmbedBuilder eb = new EmbedBuilder();
+                eb.setTimestamp(event.getTimeCreated());
+                eb.setColor(new Color((int) (Math.random() * 0x1000000)));
+                eb.setTitle("Site - Status");
+                eb.setDescription(websiteStatusStringBuilder.toString());
+                MessageBuilder mb = new MessageBuilder(eb);
+                event.reply(mb.build()).queue();
             }
         }
     }
