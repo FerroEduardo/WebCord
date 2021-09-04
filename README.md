@@ -1,7 +1,7 @@
 <p align="center">
     <h1>WebCord</h1>
-    <a href="https://github.com/FerroEduardo/DCC-Discord-Bot/actions/workflows/gradle.yml">
-        <img src="https://github.com/FerroEduardo/DCC-Discord-Bot/actions/workflows/gradle.yml/badge.svg?branch=main" alt="Java CI with Gradle">
+    <a href="https://github.com/FerroEduardo/WebCord/actions/workflows/gradle.yml">
+        <img src="https://github.com/FerroEduardo/WebCord/actions/workflows/gradle.yml/badge.svg?branch=main" alt="Java CI with Gradle">
     </a>
 </p>
 
