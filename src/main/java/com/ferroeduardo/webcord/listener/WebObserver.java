@@ -2,7 +2,6 @@ package com.ferroeduardo.webcord.listener;
 
 import com.ferroeduardo.webcord.entity.GuildInfo;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.managers.Presence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -34,14 +33,16 @@ public class WebObserver {
     private final int timeoutSeconds;
     private final int schedulerTimeRate;
     private LocalDateTime latestStatusTime;
+    private final UpdatePresenceListener presenceListener;
 
-    public WebObserver(JDA jda, EntityManagerFactory factory, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url) {
+    public WebObserver(JDA jda, EntityManagerFactory factory, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url, UpdatePresenceListener presenceListener) {
         this.jda = jda;
         this.factory = factory;
         this.timeoutSeconds = timeoutSeconds;
         this.schedulerTimeRate = schedulerTimeRate;
         this.websiteName = websiteName;
         this.url = url;
+        this.presenceListener = presenceListener;
         this.timeoutCount = 0;
         this.currentWebsiteStatus = WebsiteStatus.NONE;
         LOGGER.info(String.format("WebObserver '%s' inicializado", websiteName));
@@ -67,7 +68,6 @@ public class WebObserver {
     }
 
     private void checkWebsiteStatus() {
-        Presence presence = jda.getPresence();
         EntityManager manager = factory.createEntityManager();
         List<GuildInfo> guilds = manager.createQuery("SELECT g FROM GuildInfo AS g", GuildInfo.class).getResultList();
         manager.close();
@@ -117,7 +117,7 @@ public class WebObserver {
         } catch (HttpTimeoutException e) {
             timeoutCount++; // increment count number
             int tentativas = 3; // tentativas necessárias para detectar timeout
-            String message = String.format("Timeout (%ds) após %d tentativas de acessar o %s", timeoutSeconds, tentativas, websiteName);
+            String message = String.format("Timeout (%ds) após %d tentativa(s) de acessar o %s", timeoutSeconds, timeoutCount, websiteName);
             if (timeoutCount % tentativas == 0) {
                 if (currentWebsiteStatus != WebsiteStatus.TIMEOUT) {
                     guilds.parallelStream().forEach(guild -> {
@@ -137,7 +137,7 @@ public class WebObserver {
             currentWebsiteStatus = WebsiteStatus.ERROR;
             latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
         }
-        presence.setStatus(currentWebsiteStatus.status);
+        presenceListener.updatePresence();
     }
 
 }

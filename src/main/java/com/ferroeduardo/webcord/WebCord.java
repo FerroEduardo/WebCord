@@ -2,13 +2,12 @@ package com.ferroeduardo.webcord;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ferroeduardo.webcord.entity.ProgramProperties;
-import com.ferroeduardo.webcord.listener.MessageListener;
-import com.ferroeduardo.webcord.listener.ReadyListener;
-import com.ferroeduardo.webcord.listener.WebObserver;
+import com.ferroeduardo.webcord.listener.*;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.managers.Presence;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -97,7 +96,24 @@ public class WebCord {
 
     private void initWebObservers(EntityManagerFactory factory, MessageListener messageListener) {
         Map<String, WebObserver> webObservers = new HashMap<>();
-        properties.getWebsites().forEach((name, url) -> webObservers.put(name, new WebObserver(jda, factory, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url)));
+        UpdatePresenceListener presenceListener = () -> {
+            LOGGER.trace("Iniciando processo de atualização de presença");
+            boolean isSomethingWrong = webObservers.values()
+                    .parallelStream()
+                    .map(WebObserver::getCurrentWebsiteStatus)
+                    .anyMatch(websiteStatus -> websiteStatus.equals(WebsiteStatus.ERROR) || websiteStatus.equals(WebsiteStatus.TIMEOUT));
+            Presence presence = jda.getPresence();
+            if (isSomethingWrong) {
+                presence.setStatus(WebsiteStatus.ERROR.status);
+            } else {
+                presence.setStatus(WebsiteStatus.ONLINE.status);
+            }
+            LOGGER.trace("Atualizando presença para " + presence.getStatus().name());
+        };
+        properties.getWebsites()
+                .forEach((name, url) -> {
+                    webObservers.put(name, new WebObserver(jda, factory, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url, presenceListener));
+                });
         messageListener.setWebObservers(webObservers);
     }
 
@@ -110,6 +126,7 @@ public class WebCord {
                 .setStatus(OnlineStatus.IDLE)
                 .build();
 
+        LOGGER.trace("Atualizando slash commands");
         jda.upsertCommand("help", "Ajuda").queue();
         jda.upsertCommand("ping", "Pong").queue();
         jda.upsertCommand("invite", "Convite do bot").queue();
@@ -119,6 +136,7 @@ public class WebCord {
     }
 
     public static void start() {
+        LOGGER.info("Iniciando WebCord");
         new WebCord();
     }
 }
