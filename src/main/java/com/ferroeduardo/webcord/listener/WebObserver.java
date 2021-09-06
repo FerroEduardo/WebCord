@@ -129,7 +129,11 @@ public class WebObserver {
             }
             LOGGER.debug(message, e);
         } catch (Exception e) {
-            LOGGER.error(e.getMessage(), e);
+            String message = String.format("Ocorreu algo inesperado ao tentar acessar o %s", websiteName);
+            LOGGER.error(message, e);
+            guilds.parallelStream().forEach(guild -> {
+                guild.sendMessage(jda, message);
+            });
             currentWebsiteStatus = WebsiteStatus.ERROR;
             latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
         }
