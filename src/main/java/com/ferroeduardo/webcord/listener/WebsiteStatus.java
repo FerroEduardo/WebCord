@@ -2,7 +2,7 @@ package com.ferroeduardo.webcord.listener;
 
 import net.dv8tion.jda.api.OnlineStatus;
 
-enum WebsiteStatus {
+public enum WebsiteStatus {
     ONLINE(OnlineStatus.ONLINE),
     TIMEOUT(OnlineStatus.DO_NOT_DISTURB),
     ERROR(OnlineStatus.DO_NOT_DISTURB),
