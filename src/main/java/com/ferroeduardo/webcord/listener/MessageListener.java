@@ -192,13 +192,13 @@ public class MessageListener extends ListenerAdapter {
                                         "Ocupado - Algum serviço está fora do ar\n" +
                                         "Ausente - Inicializando bot\n" +
                                         "Invisível - Estou fora do ar\n\n");
-        descriptionStringBuilder.append(String.format("%s.ping - Ping\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append(String.format("%s.help - Comandos\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append(String.format("%s.invite - Convite do bot\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append(String.format("%s.status - Estado atual dos sites cadastrados\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%sping - Ping\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%shelp - Comandos\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%sinvite - Convite do bot\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%sstatus - Estado atual dos sites cadastrados\n", COMMAND_PREFIX));
         descriptionStringBuilder.append("\nSomente servidores---------------------------------------\n");
-        descriptionStringBuilder.append(String.format("%s.add - Adiciona canal atual para receber avisos\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append(String.format("%s.remove - Remove canal atual e deixa de receber avisos\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%sadd - Adiciona canal atual para receber avisos\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format("%sremove - Remove canal atual e deixa de receber avisos\n", COMMAND_PREFIX));
         return descriptionStringBuilder;
     }
 
