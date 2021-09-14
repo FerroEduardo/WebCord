@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.random.RandomGenerator;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -32,9 +33,11 @@ public class MessageListener extends ListenerAdapter {
     private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
     private final EntityManagerFactory factory;
     private Map<String, WebObserver> webObservers;
+    private RandomGenerator randomGenerator;
 
     public MessageListener(EntityManagerFactory factory) {
         this.factory = factory;
+        this.randomGenerator =  RandomGenerator.getDefault();
     }
 
     public void setWebObservers(Map<String, WebObserver> webObservers) {
@@ -68,7 +71,7 @@ public class MessageListener extends ListenerAdapter {
             StringBuilder descriptionStringBuilder = getHelpStringBuilder();
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTimestamp(event.getMessage().getTimeCreated());
-            eb.setColor(new Color((int) (Math.random() * 0x1000000)));
+            eb.setColor(new Color((int) (randomGenerator.nextDouble() * 0x1000000)));
             eb.setTitle("Ajuda");
             eb.setDescription(descriptionStringBuilder.toString());
             msg.reply(eb.build()).queue();
@@ -200,7 +203,7 @@ public class MessageListener extends ListenerAdapter {
             StringBuilder descriptionStringBuilder = getHelpStringBuilder();
             EmbedBuilder eb = new EmbedBuilder();
             eb.setTimestamp(event.getTimeCreated());
-            eb.setColor(new Color((int) (Math.random() * 0x1000000)));
+            eb.setColor(new Color((int) (randomGenerator.nextDouble() * 0x1000000)));
             eb.setTitle("Ajuda");
             eb.setDescription(descriptionStringBuilder.toString());
             MessageBuilder mb = new MessageBuilder(eb);
@@ -231,7 +234,7 @@ public class MessageListener extends ListenerAdapter {
         StringBuilder websiteStatusStringBuilder = getWebObserversStatusStringBuilder();
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTimestamp(timeCreated);
-        eb.setColor(new Color((int) (Math.random() * 0x1000000)));
+        eb.setColor(new Color((int) (randomGenerator.nextDouble() * 0x1000000)));
         eb.setTitle("Site - Status");
         eb.setDescription(websiteStatusStringBuilder.toString());
         return new MessageBuilder(eb);
