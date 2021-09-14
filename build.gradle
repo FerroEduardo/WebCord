@@ -21,7 +21,7 @@ application {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-    compile ("net.dv8tion:JDA:4.3.0_277") {
+    implementation ("net.dv8tion:JDA:4.3.0_277") {
         exclude module: 'opus-java'
     }
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.12.4'
