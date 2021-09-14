@@ -1,12 +1,11 @@
 package com.ferroeduardo.webcord.listener;
 
 import com.ferroeduardo.webcord.entity.GuildInfo;
+import com.ferroeduardo.webcord.service.GuildInfoService;
 import net.dv8tion.jda.api.JDA;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -25,7 +24,6 @@ public class WebObserver {
     private static final Logger LOGGER = LogManager.getLogger(WebObserver.class);
 
     private final JDA jda;
-    private final EntityManagerFactory factory;
     private final String websiteName;
     private final String url;
     private WebsiteStatus currentWebsiteStatus;
@@ -34,10 +32,11 @@ public class WebObserver {
     private final int schedulerTimeRate;
     private LocalDateTime latestStatusTime;
     private final UpdatePresenceListener presenceListener;
+    private final GuildInfoService guildInfoService;
 
-    public WebObserver(JDA jda, EntityManagerFactory factory, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url, UpdatePresenceListener presenceListener) {
+    public WebObserver(JDA jda, GuildInfoService guildInfoService, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url, UpdatePresenceListener presenceListener) {
         this.jda = jda;
-        this.factory = factory;
+        this.guildInfoService = guildInfoService;
         this.timeoutSeconds = timeoutSeconds;
         this.schedulerTimeRate = schedulerTimeRate;
         this.websiteName = websiteName;
@@ -68,9 +67,7 @@ public class WebObserver {
     }
 
     private void checkWebsiteStatus() {
-        EntityManager manager = factory.createEntityManager();
-        List<GuildInfo> guilds = manager.createQuery("SELECT g FROM GuildInfo AS g", GuildInfo.class).getResultList();
-        manager.close();
+        List<GuildInfo> guilds = guildInfoService.findAll();
         try {
             HttpClient httpClient = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()

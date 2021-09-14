@@ -3,6 +3,7 @@ package com.ferroeduardo.webcord;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ferroeduardo.webcord.entity.ProgramProperties;
 import com.ferroeduardo.webcord.listener.*;
+import com.ferroeduardo.webcord.service.GuildInfoService;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -12,8 +13,6 @@ import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.IOException;
@@ -28,6 +27,7 @@ public class WebCord {
 
     private static final String PROPERTIES_FILE_NAME = "webcord.json";
     private static final Logger LOGGER = LogManager.getLogger(WebCord.class);
+    private GuildInfoService guildInfoService;
 
     private JDA jda;
     private ProgramProperties properties;
@@ -40,18 +40,20 @@ public class WebCord {
             LOGGER.info("Carregando propriedades do banco de dados");
             Map<String, Object> databaseProperties = getDatabaseProperties(properties);
 
-            LOGGER.info("Inicializando 'EntityManagerFactory' para persistencia dos dados");
-            EntityManagerFactory factory = Persistence.createEntityManagerFactory("webcord", databaseProperties);
-            MessageListener messageListener = new MessageListener(factory);
+            LOGGER.info("Iniciando GuildInfoService");
+            guildInfoService = new GuildInfoService(databaseProperties);
+
+            LOGGER.info("Iniciando MessageListener");
+            MessageListener messageListener = new MessageListener(guildInfoService);
 
             LOGGER.info("Inicializando JDA");
             initJDA(messageListener);
 
             LOGGER.info("Verificando existência de canais cadastrados no banco de dados");
-            Util.checkDatabaseDataIntegrity(jda, factory);
+            Util.checkDatabaseDataIntegrity(jda, guildInfoService);
 
             LOGGER.info("Inicializando WebObservers");
-            initWebObservers(factory, messageListener);
+            initWebObservers(messageListener);
         } catch (LoginException e) {
             LOGGER.error("Falha ao fazer login. Talvez o token esteja incorreto", e);
         } catch (IOException | URISyntaxException | InterruptedException e) {
@@ -94,7 +96,7 @@ public class WebCord {
         return databaseProperties;
     }
 
-    private void initWebObservers(EntityManagerFactory factory, MessageListener messageListener) {
+    private void initWebObservers(MessageListener messageListener) {
         Map<String, WebObserver> webObservers = new HashMap<>();
         UpdatePresenceListener presenceListener = () -> {
             LOGGER.trace("Iniciando processo de atualização de presença");
@@ -112,7 +114,7 @@ public class WebCord {
         };
         properties.getWebsites()
                 .forEach((name, url) -> {
-                    webObservers.put(name, new WebObserver(jda, factory, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url, presenceListener));
+                    webObservers.put(name, new WebObserver(jda, guildInfoService, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url, presenceListener));
                 });
         messageListener.setWebObservers(webObservers);
     }

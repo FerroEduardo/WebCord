@@ -3,6 +3,7 @@ package com.ferroeduardo.webcord.listener;
 import com.ferroeduardo.webcord.Util;
 import com.ferroeduardo.webcord.entity.GuildInfo;
 import com.ferroeduardo.webcord.exception.AlreadyExistsException;
+import com.ferroeduardo.webcord.service.GuildInfoService;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
@@ -14,8 +15,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import java.awt.*;
 import java.time.LocalDateTime;
@@ -30,12 +29,12 @@ public class MessageListener extends ListenerAdapter {
 
     public static final String COMMAND_PREFIX = "\\\\";
     private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
-    private final EntityManagerFactory factory;
     private Map<String, WebObserver> webObservers;
     private RandomGenerator randomGenerator;
+    private GuildInfoService guildInfoService;
 
-    public MessageListener(EntityManagerFactory factory) {
-        this.factory = factory;
+    public MessageListener(GuildInfoService guildInfoService) {
+        this.guildInfoService = guildInfoService;
         this.randomGenerator =  RandomGenerator.getDefault();
     }
 
@@ -98,24 +97,14 @@ public class MessageListener extends ListenerAdapter {
                 if (isAdmin) {
                     long guildId = guild.getIdLong();
                     long channelId = textChannel.getIdLong();
-                    EntityManager entityManager = factory.createEntityManager();
                     try {
-                        GuildInfo singleResult = entityManager
-                                .createQuery("SELECT g FROM GuildInfo AS g WHERE g.guildId=?1 and g.guildChannelId=?2", GuildInfo.class)
-                                .setParameter(1, guildId)
-                                .setParameter(2, channelId)
-                                .setMaxResults(1)
-                                .getSingleResult();
-                        if (singleResult != null) {
+                        GuildInfo guildInfo = guildInfoService.find(guildId, channelId);
+                        if (guildInfo != null) {
                             throw LOGGER.throwing(new AlreadyExistsException("Canal já foi adicionado anteriormente"));
                         }
                     } catch (NoResultException e) {
                         LOGGER.trace(String.format("Nenhum canal foi encontrado, cadastrando canal '%d' do servidor '%d' no banco de dados", channelId, guildId), e);
-                        GuildInfo guildInfo = new GuildInfo(guildId, channelId);
-                        entityManager.getTransaction().begin();
-                        entityManager.persist(guildInfo);
-                        entityManager.getTransaction().commit();
-                        entityManager.close();
+                        guildInfoService.save(new GuildInfo(guildId, channelId));
                         msg.reply("Configurado com sucesso").queue(deleteMessagesAfterTime);
                     } catch (AlreadyExistsException e) {
                         LOGGER.debug(e);
@@ -131,26 +120,17 @@ public class MessageListener extends ListenerAdapter {
                 if (isAdmin) {
                     long guildId = guild.getIdLong();
                     long channelId = textChannel.getIdLong();
-                    EntityManager entityManager = factory.createEntityManager();
                     try {
-                        GuildInfo singleResult = entityManager
-                                .createQuery("SELECT g FROM GuildInfo AS g WHERE g.guildId=?1 and g.guildChannelId=?2", GuildInfo.class)
-                                .setParameter(1, guildId)
-                                .setParameter(2, channelId)
-                                .setMaxResults(1)
-                                .getSingleResult();
-
-                        entityManager.getTransaction().begin();
-                        entityManager.remove(singleResult);
-                        entityManager.getTransaction().commit();
-                        entityManager.close();
+                        guildInfoService.delete(guildId, channelId);
                         msg.reply("Canal removido com sucesso").queue(deleteMessagesAfterTime);
                     } catch (NoResultException e) {
-                        LOGGER.debug(e);
-                        msg.reply("Parece que esse canal não está cadastrado para poder ser removido").queue(deleteMessagesAfterTime);
+                        String message = "Parece que esse canal não está cadastrado para poder ser removido";
+                        LOGGER.debug(message, e);
+                        msg.reply(message).queue(deleteMessagesAfterTime);
                     } catch (Exception e) {
-                        LOGGER.warn(e);
-                        msg.reply("Ocorreu uma falha ao remover o canal").queue(deleteMessagesAfterTime);
+                        String message = "Ocorreu uma falha ao remover o canal";
+                        LOGGER.warn(message, e);
+                        msg.reply(message).queue(deleteMessagesAfterTime);
                     }
                 } else {
                     msg.reply("Você não é um administrador para poder realizar essa ação").queue(deleteMessagesAfterTime);

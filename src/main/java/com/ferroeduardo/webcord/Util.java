@@ -1,6 +1,7 @@
 package com.ferroeduardo.webcord;
 
 import com.ferroeduardo.webcord.entity.GuildInfo;
+import com.ferroeduardo.webcord.service.GuildInfoService;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Guild;
@@ -8,9 +9,6 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Query;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -26,9 +24,8 @@ public class Util {
         return String.format("https://discord.com/api/oauth2/authorize?client_id=%d&permissions=%d", clientId, permission) + "&scope=bot%20applications.commands";
     }
 
-    public static void checkDatabaseDataIntegrity(JDA jda, EntityManagerFactory factory) {
-        EntityManager manager = factory.createEntityManager();
-        List<GuildInfo> guilds = manager.createQuery("SELECT g FROM GuildInfo AS g", GuildInfo.class).getResultList();
+    public static void checkDatabaseDataIntegrity(JDA jda, GuildInfoService guildInfoService) {
+        List<GuildInfo> guilds = guildInfoService.findAll();
         Set<Long> rowsToRemove = new HashSet<>();
         guilds.parallelStream().forEach(guildInfo -> {
             long guildId = guildInfo.getGuildId();
@@ -38,11 +35,7 @@ public class Util {
                 rowsToRemove.add(guildInfo.getId());
             }
         });
-        manager.getTransaction().begin();
-        Query deleteQuery = manager.createQuery("DELETE FROM GuildInfo g WHERE g.id in (?1)");
-        deleteQuery.setParameter(1, rowsToRemove);
-        int removedRows = deleteQuery.executeUpdate();
-        manager.getTransaction().commit();
+        int removedRows = guildInfoService.delete(rowsToRemove);
         LOGGER.debug(String.format("%d canais/servidores inválidos removidos do banco de dados", removedRows));
     }
 
