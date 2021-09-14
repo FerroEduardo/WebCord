@@ -22,6 +22,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class WebCord {
 
@@ -124,7 +127,7 @@ public class WebCord {
                 .setEnabledIntents(GatewayIntent.GUILD_MESSAGES, GatewayIntent.DIRECT_MESSAGES)
                 .addEventListeners(new ReadyListener())
                 .addEventListeners(messageListener)
-                .setActivity(Activity.of(Activity.ActivityType.WATCHING, MessageListener.COMMAND_PREFIX + "help"))
+                .setActivity(Activity.playing(String.format("%shelp", MessageListener.COMMAND_PREFIX)))
                 .setStatus(OnlineStatus.IDLE)
                 .build();
 
@@ -135,6 +138,12 @@ public class WebCord {
         jda.upsertCommand("status", "Estado atual dos sites").queue();
 
         jda.awaitReady();
+
+        LOGGER.info("Iniciando 'ScheduledExecutorService' da quantidade de servidores em que o BOT está presente");
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(() -> {
+            jda.getPresence().setActivity(Activity.playing(String.format("em %d servidores | %shelp", jda.getGuilds().size(), MessageListener.COMMAND_PREFIX)));
+        }, 0, 1, TimeUnit.HOURS);
     }
 
     public static void start() {
