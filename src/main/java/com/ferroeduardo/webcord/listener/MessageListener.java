@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.random.RandomGenerator;
@@ -94,9 +93,8 @@ public class MessageListener extends ListenerAdapter {
             TextChannel textChannel = event.getTextChannel();
             Member member = event.getMember();
             Guild guild = event.getGuild();
+            boolean isAdmin = member.getRoles().stream().anyMatch(role -> role.hasPermission(Permission.ADMINISTRATOR));
             if (content.equals(COMMAND_PREFIX + "add")) {
-                Optional<Role> optionalRole = member.getRoles().stream().filter(role -> role.hasPermission(Permission.ADMINISTRATOR)).findFirst();
-                boolean isAdmin = optionalRole.isPresent();
                 if (isAdmin) {
                     long guildId = guild.getIdLong();
                     long channelId = textChannel.getIdLong();
@@ -130,7 +128,6 @@ public class MessageListener extends ListenerAdapter {
                     msg.reply("Você não é um administrador para realizar essa ação").queue(deleteMessagesAfterTime);
                 }
             } else if (content.equals(COMMAND_PREFIX + "remove")) {
-                boolean isAdmin = member.getRoles().stream().anyMatch(role -> role.hasPermission(Permission.ADMINISTRATOR));
                 if (isAdmin) {
                     long guildId = guild.getIdLong();
                     long channelId = textChannel.getIdLong();
