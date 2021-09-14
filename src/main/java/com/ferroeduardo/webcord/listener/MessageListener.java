@@ -86,21 +86,30 @@ public class MessageListener extends ListenerAdapter {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                         if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
                             websiteStatusStringBuilder.append(String.format(
-                                    "%s:\n" +
-                                            "- Status: %s\n" +
-                                            "- Quantidade de Timeouts: %d\n" +
-                                            "- Desde: %s\n\n",
+                                    """
+                                    "%s:"
+                                    "- Status: %s"
+                                    "- Quantidade de Timeouts: %d"
+                                    "- Desde: %s"
+                                    
+                                    """,
                                     name, currentWebsiteStatus.name(), webObserver.getTimeoutCount(), latestStatusTime.format(formatter)));
                         } else {
                             websiteStatusStringBuilder.append(String.format(
-                                    "%s:\n" +
-                                            "- Status: %s\n\n",
+                                    """                            
+                                    %s:
+                                    - Status: %s
+                                    
+                                    """,
                                     name, currentWebsiteStatus.name()));
                         }
                     } else {
                         websiteStatusStringBuilder.append(String.format(
-                                "%s:\n" +
-                                        "- Status: AGUARDE\n\n",
+                                """
+                                "%s:" +
+                                "- Status: AGUARDE"
+                                
+                                """,
                                 name));
                     }
                 });
@@ -187,18 +196,35 @@ public class MessageListener extends ListenerAdapter {
 
     private StringBuilder getHelpStringBuilder() {
         StringBuilder descriptionStringBuilder = new StringBuilder();
-        descriptionStringBuilder.append("Quando fico:\n" +
-                                        "Online - Tudo funcionando perfeitamente\n" +
-                                        "Ocupado - Algum serviço está fora do ar\n" +
-                                        "Ausente - Inicializando bot\n" +
-                                        "Invisível - Estou fora do ar\n\n");
-        descriptionStringBuilder.append(String.format("%sping - Ping\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append(String.format("%shelp - Comandos\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append(String.format("%sinvite - Convite do bot\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append(String.format("%sstatus - Estado atual dos sites cadastrados\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append("\nSomente servidores---------------------------------------\n");
-        descriptionStringBuilder.append(String.format("%sadd - Adiciona canal atual para receber avisos\n", COMMAND_PREFIX));
-        descriptionStringBuilder.append(String.format("%sremove - Remove canal atual e deixa de receber avisos\n", COMMAND_PREFIX));
+        descriptionStringBuilder.append(String.format(
+                """
+                Quando fico:
+                Online - Tudo funcionando perfeitamente
+                Ocupado - Algum serviço está fora do ar
+                Ausente - Inicializando bot
+                Invisível - Estou fora do ar
+                
+                %1$sping - Ping
+                %1$shelp - Comandos
+                %1$sinvite - Convite do bot
+                %1$sstatus - Estado atual dos sites cadastrados
+                
+                Somente servidores---------------------------------------
+                %1$sadd - Adiciona canal atual para receber avisos
+                %1$sremove - Remove canal atual e deixa de receber avisos
+                """, COMMAND_PREFIX));
+        if (!webObservers.isEmpty()) {
+            descriptionStringBuilder.append("\nSites cadastrados----------------------------------------\n");
+            webObservers.keySet().forEach(key -> {
+                descriptionStringBuilder.append(String.format("%s\n", key));
+            });
+        } else {
+            descriptionStringBuilder.append(
+                    """
+                    Sites cadastrados----------------------------------------
+                    Nenhum site foi cadastrado no bot
+                    """);
+        }
         return descriptionStringBuilder;
     }
 
@@ -234,21 +260,30 @@ public class MessageListener extends ListenerAdapter {
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                         if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
                             websiteStatusStringBuilder.append(String.format(
-                                    "%s:\n" +
-                                            "- Status: %s\n" +
-                                            "- Quantidade de Timeouts: %d\n" +
-                                            "- Desde: %s\n\n",
+                                    """
+                                    "%s:"
+                                    "- Status: %s"
+                                    "- Quantidade de Timeouts: %d"
+                                    "- Desde: %s"
+                                    
+                                    """,
                                     name, currentWebsiteStatus.name(), webObserver.getTimeoutCount(), latestStatusTime.format(formatter)));
                         } else {
                             websiteStatusStringBuilder.append(String.format(
-                                    "%s:\n" +
-                                            "- Status: %s\n\n",
+                                    """                            
+                                    %s:
+                                    - Status: %s
+                                    
+                                    """,
                                     name, currentWebsiteStatus.name()));
                         }
                     } else {
                         websiteStatusStringBuilder.append(String.format(
-                                "%s:\n" +
-                                        "- Status: AGUARDE\n\n",
+                                """
+                                "%s:" +
+                                "- Status: AGUARDE"
+                                
+                                """,
                                 name));
                     }
                 });
@@ -263,3 +298,4 @@ public class MessageListener extends ListenerAdapter {
         }
     }
 }
+;
