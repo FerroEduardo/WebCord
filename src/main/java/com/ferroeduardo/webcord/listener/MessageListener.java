@@ -19,6 +19,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import java.awt.*;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Optional;
@@ -27,9 +28,8 @@ import java.util.function.Consumer;
 
 public class MessageListener extends ListenerAdapter {
 
-    private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
-
     public static final String COMMAND_PREFIX = "\\\\";
+    private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
     private final EntityManagerFactory factory;
     private Map<String, WebObserver> webObservers;
 
@@ -78,47 +78,12 @@ public class MessageListener extends ListenerAdapter {
             if (webObservers == null) {
                 msg.reply("Aguarde um momento...").queue(deleteMessagesAfterTime);
             } else {
-                StringBuilder websiteStatusStringBuilder = new StringBuilder();
-                webObservers.forEach((name, webObserver) -> {
-                    WebsiteStatus currentWebsiteStatus = webObserver.getCurrentWebsiteStatus();
-                    if (currentWebsiteStatus != WebsiteStatus.NONE) {
-                        LocalDateTime latestStatusTime = webObserver.getLatestStatusTime();
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                        if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
-                            websiteStatusStringBuilder.append(String.format(
-                                    """
-                                    "%s:"
-                                    "- Status: %s"
-                                    "- Quantidade de Timeouts: %d"
-                                    "- Desde: %s"
-                                    
-                                    """,
-                                    name, currentWebsiteStatus.name(), webObserver.getTimeoutCount(), latestStatusTime.format(formatter)));
-                        } else {
-                            websiteStatusStringBuilder.append(String.format(
-                                    """                            
-                                    %s:
-                                    - Status: %s
-                                    
-                                    """,
-                                    name, currentWebsiteStatus.name()));
-                        }
-                    } else {
-                        websiteStatusStringBuilder.append(String.format(
-                                """
-                                "%s:" +
-                                "- Status: AGUARDE"
-                                
-                                """,
-                                name));
-                    }
-                });
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setTimestamp(event.getMessage().getTimeCreated());
-                eb.setColor(new Color((int) (Math.random() * 0x1000000)));
-                eb.setTitle("Site - Status");
-                eb.setDescription(websiteStatusStringBuilder.toString());
-                msg.reply(eb.build()).queue();
+                if (webObservers.isEmpty()) {
+                    msg.reply("Nenhum site foi cadastrado no bot").queue();
+                } else {
+                    MessageBuilder mb = getWebObserversStatusMessageBuilder(event.getMessage().getTimeCreated());
+                    msg.reply(mb.build()).queue();
+                }
             }
         }
 
@@ -198,21 +163,21 @@ public class MessageListener extends ListenerAdapter {
         StringBuilder descriptionStringBuilder = new StringBuilder();
         descriptionStringBuilder.append(String.format(
                 """
-                Quando fico:
-                Online - Tudo funcionando perfeitamente
-                Ocupado - Algum serviço está fora do ar
-                Ausente - Inicializando bot
-                Invisível - Estou fora do ar
-                
-                %1$sping - Ping
-                %1$shelp - Comandos
-                %1$sinvite - Convite do bot
-                %1$sstatus - Estado atual dos sites cadastrados
-                
-                Somente servidores---------------------------------------
-                %1$sadd - Adiciona canal atual para receber avisos
-                %1$sremove - Remove canal atual e deixa de receber avisos
-                """, COMMAND_PREFIX));
+                        Quando fico:
+                        Online - Tudo funcionando perfeitamente
+                        Ocupado - Algum serviço está fora do ar
+                        Ausente - Inicializando bot
+                        Invisível - Estou fora do ar
+                                        
+                        %1$sping - Ping
+                        %1$shelp - Comandos
+                        %1$sinvite - Convite do bot
+                        %1$sstatus - Estado atual dos sites cadastrados
+                                        
+                        Somente servidores---------------------------------------
+                        %1$sadd - Adiciona canal atual para receber avisos
+                        %1$sremove - Remove canal atual e deixa de receber avisos
+                        """, COMMAND_PREFIX));
         if (!webObservers.isEmpty()) {
             descriptionStringBuilder.append("\nSites cadastrados----------------------------------------\n");
             webObservers.keySet().forEach(key -> {
@@ -221,9 +186,9 @@ public class MessageListener extends ListenerAdapter {
         } else {
             descriptionStringBuilder.append(
                     """
-                    Sites cadastrados----------------------------------------
-                    Nenhum site foi cadastrado no bot
-                    """);
+                            Sites cadastrados----------------------------------------
+                            Nenhum site foi cadastrado no bot
+                            """);
         }
         return descriptionStringBuilder;
     }
@@ -252,50 +217,62 @@ public class MessageListener extends ListenerAdapter {
             if (webObservers == null) {
                 event.reply("Aguarde um momento...").queue();
             } else {
-                StringBuilder websiteStatusStringBuilder = new StringBuilder();
-                webObservers.forEach((name, webObserver) -> {
-                    WebsiteStatus currentWebsiteStatus = webObserver.getCurrentWebsiteStatus();
-                    if (currentWebsiteStatus != WebsiteStatus.NONE) {
-                        LocalDateTime latestStatusTime = webObserver.getLatestStatusTime();
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-                        if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
-                            websiteStatusStringBuilder.append(String.format(
-                                    """
+                if (webObservers.isEmpty()) {
+                    event.reply("Nenhum site foi cadastrado no bot").queue();
+                } else {
+                    MessageBuilder mb = getWebObserversStatusMessageBuilder(event.getTimeCreated());
+                    event.reply(mb.build()).queue();
+                }
+            }
+        }
+    }
+
+    private MessageBuilder getWebObserversStatusMessageBuilder(OffsetDateTime timeCreated) {
+        StringBuilder websiteStatusStringBuilder = getWebObserversStatusStringBuilder();
+        EmbedBuilder eb = new EmbedBuilder();
+        eb.setTimestamp(timeCreated);
+        eb.setColor(new Color((int) (Math.random() * 0x1000000)));
+        eb.setTitle("Site - Status");
+        eb.setDescription(websiteStatusStringBuilder.toString());
+        return new MessageBuilder(eb);
+    }
+
+    private StringBuilder getWebObserversStatusStringBuilder() {
+        StringBuilder websiteStatusStringBuilder = new StringBuilder();
+        webObservers.forEach((name, webObserver) -> {
+            WebsiteStatus currentWebsiteStatus = webObserver.getCurrentWebsiteStatus();
+            if (currentWebsiteStatus != WebsiteStatus.NONE) {
+                LocalDateTime latestStatusTime = webObserver.getLatestStatusTime();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+                if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
+                    websiteStatusStringBuilder.append(String.format(
+                            """
                                     "%s:"
                                     "- Status: %s"
                                     "- Quantidade de Timeouts: %d"
                                     "- Desde: %s"
-                                    
+                                                                        
                                     """,
-                                    name, currentWebsiteStatus.name(), webObserver.getTimeoutCount(), latestStatusTime.format(formatter)));
-                        } else {
-                            websiteStatusStringBuilder.append(String.format(
-                                    """                            
+                            name, currentWebsiteStatus.name(), webObserver.getTimeoutCount(), latestStatusTime.format(formatter)));
+                } else {
+                    websiteStatusStringBuilder.append(String.format(
+                            """                            
                                     %s:
                                     - Status: %s
-                                    
+                                                                        
                                     """,
-                                    name, currentWebsiteStatus.name()));
-                        }
-                    } else {
-                        websiteStatusStringBuilder.append(String.format(
-                                """
+                            name, currentWebsiteStatus.name()));
+                }
+            } else {
+                websiteStatusStringBuilder.append(String.format(
+                        """
                                 "%s:" +
                                 "- Status: AGUARDE"
-                                
+                                                                
                                 """,
-                                name));
-                    }
-                });
-                EmbedBuilder eb = new EmbedBuilder();
-                eb.setTimestamp(event.getTimeCreated());
-                eb.setColor(new Color((int) (Math.random() * 0x1000000)));
-                eb.setTitle("Site - Status");
-                eb.setDescription(websiteStatusStringBuilder.toString());
-                MessageBuilder mb = new MessageBuilder(eb);
-                event.reply(mb.build()).queue();
+                        name));
             }
-        }
+        });
+        return websiteStatusStringBuilder;
     }
 }
-;
