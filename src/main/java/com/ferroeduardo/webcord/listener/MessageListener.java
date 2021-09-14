@@ -29,7 +29,7 @@ public class MessageListener extends ListenerAdapter {
 
     private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
 
-    public static final String COMMAND_PREFIX = "webcord.";
+    public static final String COMMAND_PREFIX = "\\\\";
     private final EntityManagerFactory factory;
     private Map<String, WebObserver> webObservers;
 
