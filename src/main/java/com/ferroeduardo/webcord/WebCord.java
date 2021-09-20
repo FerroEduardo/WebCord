@@ -70,8 +70,10 @@ public class WebCord {
         Path propertiesPath = Paths.get(currentPath.toString(), File.separator, PROPERTIES_FILE_NAME);
         ObjectMapper mapper = new ObjectMapper();
 
-        //If file exists
-        if (propertiesPath.toFile().isFile()) {
+        File propertiesFile = propertiesPath.toFile();
+        boolean fileExists = propertiesFile.exists();
+        boolean isFile = propertiesFile.isFile();
+        if (isFile && fileExists) {
             properties = mapper.readValue(Files.newInputStream(propertiesPath), ProgramProperties.class);
             if (!properties.isOk()) {
                 throw LOGGER.throwing(new IllegalStateException("Falha ao tentar obter os dados do arquivo: " + PROPERTIES_FILE_NAME));

@@ -79,7 +79,7 @@ public class WebObserver {
             LOGGER.trace(String.format("Tentando fazer a requisição para %s", this.url));
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             LOGGER.trace(String.format("Requisição para %s foi concluída com sucesso", this.url));
-            timeoutCount = 0; // reset count number
+            timeoutCount = 0;
             if (response.statusCode() == 200) {
                 String message = String.format("%s online. Status code: %d", websiteName, response.statusCode());
                 if (currentWebsiteStatus != WebsiteStatus.ONLINE) {
@@ -103,19 +103,15 @@ public class WebObserver {
             }
         } catch (IllegalArgumentException e) {
             if (currentWebsiteStatus != WebsiteStatus.ERROR) {
-//                guilds.parallelStream().forEach(guild -> {
-//                    String message = "URI informada está incorreta";
-//                    guild.sendMessage(jda, message);
-//                });
                 currentWebsiteStatus = WebsiteStatus.ERROR;
                 latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
             }
             LOGGER.error(String.format("URI do %s está incorreta", websiteName), e);
         } catch (HttpTimeoutException e) {
-            timeoutCount++; // increment count number
-            int tentativas = 3; // tentativas necessárias para detectar timeout
+            timeoutCount++;
+            int neededAttemptsToDetectTimeout = 3;
             String message = String.format("Timeout (%ds) após %d tentativa(s) de acessar o %s", timeoutSeconds, timeoutCount, websiteName);
-            if (timeoutCount % tentativas == 0) {
+            if (timeoutCount % neededAttemptsToDetectTimeout == 0) {
                 if (currentWebsiteStatus != WebsiteStatus.TIMEOUT) {
                     guilds.parallelStream().forEach(guild -> {
                         guild.sendMessage(jda, message);
