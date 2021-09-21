@@ -25,6 +25,7 @@ O valor padrão para todas as chaves é `null` e o código só funcionará se os
   "token" : null,
   "timeoutSeconds" : null,
   "schedulerSeconds" : null,
+  "timezone": null,
   "websites": {
     "nome_do_site" : "url_do_site",
     "nome_de_outro_site" : "url_de_outro_site"
