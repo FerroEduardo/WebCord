@@ -1,7 +1,9 @@
 package com.ferroeduardo.webcord.listener;
 
 import com.ferroeduardo.webcord.entity.GuildInfo;
+import com.ferroeduardo.webcord.entity.WebsiteRecord;
 import com.ferroeduardo.webcord.service.GuildInfoService;
+import com.ferroeduardo.webcord.service.WebsiteRecordService;
 import net.dv8tion.jda.api.JDA;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,8 +14,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,11 +32,13 @@ public class WebObserver {
     private int timeoutCount;
     private final int timeoutSeconds;
     private final int schedulerTimeRate;
-    private LocalDateTime latestStatusTime;
+    private ZonedDateTime latestStatusTime;
     private final UpdatePresenceListener presenceListener;
     private final GuildInfoService guildInfoService;
+    private WebsiteRecordService websiteRecordService;
+    private final ZoneId zone;
 
-    public WebObserver(JDA jda, GuildInfoService guildInfoService, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url, UpdatePresenceListener presenceListener) {
+    public WebObserver(JDA jda, GuildInfoService guildInfoService, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url, UpdatePresenceListener presenceListener, WebsiteRecordService websiteRecordService, ZoneId zone) {
         this.jda = jda;
         this.guildInfoService = guildInfoService;
         this.timeoutSeconds = timeoutSeconds;
@@ -42,8 +46,10 @@ public class WebObserver {
         this.websiteName = websiteName;
         this.url = url;
         this.presenceListener = presenceListener;
+        this.zone = zone;
         this.timeoutCount = 0;
         this.currentWebsiteStatus = WebsiteStatus.NONE;
+        this.websiteRecordService = websiteRecordService;
         LOGGER.info(String.format("WebObserver '%s' inicializado", websiteName));
         initScheduler();
     }
@@ -58,7 +64,7 @@ public class WebObserver {
         return currentWebsiteStatus;
     }
 
-    public LocalDateTime getLatestStatusTime() {
+    public ZonedDateTime getLatestStatusTime() {
         return latestStatusTime;
     }
 
@@ -87,8 +93,9 @@ public class WebObserver {
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.ONLINE;
-                    latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
+                    latestStatusTime = ZonedDateTime.now(zone);
                 }
+                recordWebsiteStatus(ZonedDateTime.now(zone), this.websiteName, WebsiteStatus.ONLINE);
                 LOGGER.info(message);
             } else {
                 String message = String.format("Algo de errado aconteceu com o %s. Status code: %d", websiteName, response.statusCode());
@@ -97,15 +104,17 @@ public class WebObserver {
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.ERROR;
-                    latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
+                    latestStatusTime = ZonedDateTime.now(zone);
                 }
+                recordWebsiteStatus(ZonedDateTime.now(zone), this.websiteName, WebsiteStatus.ERROR);
                 LOGGER.info(message.trim());
             }
         } catch (IllegalArgumentException e) {
             if (currentWebsiteStatus != WebsiteStatus.ERROR) {
                 currentWebsiteStatus = WebsiteStatus.ERROR;
-                latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
+                latestStatusTime = ZonedDateTime.now(zone);
             }
+            recordWebsiteStatus(ZonedDateTime.now(zone), this.websiteName, WebsiteStatus.ERROR);
             LOGGER.error(String.format("URI do %s está incorreta", websiteName), e);
         } catch (HttpTimeoutException e) {
             timeoutCount++;
@@ -117,9 +126,10 @@ public class WebObserver {
                         guild.sendMessage(jda, message);
                     });
                     currentWebsiteStatus = WebsiteStatus.TIMEOUT;
-                    latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
+                    latestStatusTime = ZonedDateTime.now(zone);
                 }
             }
+            recordWebsiteStatus(ZonedDateTime.now(zone), this.websiteName, WebsiteStatus.TIMEOUT);
             LOGGER.debug(message, e);
         } catch (Exception e) {
             String message = String.format("Ocorreu algo inesperado ao tentar acessar o %s", websiteName);
@@ -128,9 +138,18 @@ public class WebObserver {
                 guild.sendMessage(jda, message);
             });
             currentWebsiteStatus = WebsiteStatus.ERROR;
-            latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
+            latestStatusTime = ZonedDateTime.now(zone);
+            recordWebsiteStatus(latestStatusTime, this.websiteName, currentWebsiteStatus);
         }
         presenceListener.updatePresence();
+    }
+
+    private void recordWebsiteStatus(ZonedDateTime dateTime, String websiteName, WebsiteStatus websiteStatus) {
+        if (websiteRecordService != null) {
+            LOGGER.trace("Salvando registro do status");
+            WebsiteRecord websiteRecord = new WebsiteRecord(null, dateTime, websiteName, websiteStatus);
+            websiteRecordService.save(websiteRecord);
+        }
     }
 
 }
