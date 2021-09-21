@@ -92,7 +92,7 @@ public class MessageListener extends ListenerAdapter {
             TextChannel textChannel = event.getTextChannel();
             Member member = event.getMember();
             Guild guild = event.getGuild();
-            boolean isAdmin = member.getRoles().stream().anyMatch(role -> role.hasPermission(Permission.ADMINISTRATOR)) || guild.getOwnerIdLong() == member.getIdLong();
+            boolean isAdmin = member.hasPermission(Permission.ADMINISTRATOR);
             if (content.equals(COMMAND_PREFIX + "add")) {
                 if (isAdmin) {
                     long guildId = guild.getIdLong();
