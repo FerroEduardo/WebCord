@@ -11,8 +11,12 @@
 
         <!-- entidades mapeadas -->
         <class>com.ferroeduardo.webcord.entity.GuildInfo</class>
+        <class>com.ferroeduardo.webcord.entity.WebsiteRecord</class>
 
         <properties>
+            <!-- Time zone -->
+<!--            <property name="hibernate.jdbc.time_zone" value="GMT-3"/>-->
+
             <!-- dados da conexao -->
             <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
 <!--            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/postgres" />-->
