@@ -41,3 +41,7 @@ Para gerar um executável .jar:
 ```bash
 ./gradlew jar
 ```
+
+## Exemplos:
+
+![exemplo de uso](/imgs/webcord_example.png)
