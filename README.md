@@ -7,7 +7,7 @@
 
 ## Desenvolvimento:
 O bot foi desenvolvido em:
-- Java 11, utilizando o Gradle para as dependências
+- Java 17, utilizando o Gradle para as dependências
 - [JDA](https://github.com/DV8FromTheWorld/JDA), API do Discord para Java
 - [Hibernate](https://hibernate.org/orm/) para ORM e o driver do JDBC para o Postgres
 
