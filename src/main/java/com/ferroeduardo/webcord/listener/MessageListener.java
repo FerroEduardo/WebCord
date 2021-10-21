@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nullable;
 import javax.persistence.NoResultException;
 import java.awt.*;
 import java.time.LocalDateTime;
@@ -30,12 +31,14 @@ public class MessageListener extends ListenerAdapter {
     public static final String COMMAND_PREFIX = "\\\\";
     private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
     private Map<String, WebObserver> webObservers;
+    private Map<String, String> infos;
     private RandomGenerator randomGenerator;
     private GuildInfoService guildInfoService;
 
-    public MessageListener(GuildInfoService guildInfoService) {
+    public MessageListener(GuildInfoService guildInfoService, @Nullable Map<String, String> infos) {
         this.guildInfoService = guildInfoService;
         this.randomGenerator =  RandomGenerator.getDefault();
+        this.infos = infos;
     }
 
     public void setWebObservers(Map<String, WebObserver> webObservers) {
@@ -169,6 +172,10 @@ public class MessageListener extends ListenerAdapter {
                             Sites cadastrados----------------------------------------
                             Nenhum site foi cadastrado no bot
                             """);
+        }
+        if (this.infos != null && !this.infos.isEmpty()) {
+            descriptionStringBuilder.append("------------------------------\n");
+            this.infos.forEach((key, value) -> descriptionStringBuilder.append(String.format("%s: %s\n", key, value)));
         }
         return descriptionStringBuilder;
     }

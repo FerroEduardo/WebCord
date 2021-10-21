@@ -16,7 +16,8 @@ Na primeira vez que o código for executado, ele irá gerar um arquivo `webcord.
 Se estiver executando um `.jar`, o .json irá ser gerado na mesma pasta.
 Mas es estiver executando pelo `Gradle`, o arquivo será gerado na pasta `build/classes/java/`.  
 Esse arquivo terá as chaves necessárias para acessar o banco de dados Postgres e o token do bot do discord.
-O valor padrão para todas as chaves é `null` e o código só funcionará se os valores forem substituídos.
+O valor padrão para todas as chaves é `null` e o código só funcionará se os valores forem substituídos.  
+A chave `infos` é opcional e é utilizada para exibir os dados no embed do comando `\\help`
 ```json
 {
   "databaseName" : null,
@@ -28,6 +29,10 @@ O valor padrão para todas as chaves é `null` e o código só funcionará se os
   "websites": {
     "nome_do_site" : "url_do_site",
     "nome_de_outro_site" : "url_de_outro_site"
+  },
+  "infos": {
+    "Repositório": "https://github.com/FerroEduardo/WebCord",
+    "exemplo": "mensagem"
   }
 }
 ```
