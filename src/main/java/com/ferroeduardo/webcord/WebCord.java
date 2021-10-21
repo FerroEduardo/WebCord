@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ferroeduardo.webcord.entity.ProgramProperties;
 import com.ferroeduardo.webcord.listener.*;
 import com.ferroeduardo.webcord.service.GuildInfoService;
+import com.ferroeduardo.webcord.service.WebsiteRecordService;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -20,6 +21,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -31,11 +33,12 @@ public class WebCord {
     private static final String PROPERTIES_FILE_NAME = "webcord.json";
     private static final Logger LOGGER = LogManager.getLogger(WebCord.class);
     private GuildInfoService guildInfoService;
+    private WebsiteRecordService websiteRecordService;
 
     private JDA jda;
     private ProgramProperties properties;
 
-    private WebCord() {
+    private WebCord(String[] args) {
         try {
             LOGGER.info(String.format("Carregando arquivo de configurações '%s'", PROPERTIES_FILE_NAME));
             properties = getProgramProperties();
@@ -45,6 +48,11 @@ public class WebCord {
 
             LOGGER.info("Iniciando GuildInfoService");
             guildInfoService = new GuildInfoService(databaseProperties);
+
+            if (Arrays.asList(args).contains("-record")) {
+                LOGGER.info("Iniciando WebsiteRecordService");
+                websiteRecordService = new WebsiteRecordService(databaseProperties);
+            }
 
             LOGGER.info("Iniciando MessageListener");
             MessageListener messageListener = new MessageListener(guildInfoService);
@@ -97,6 +105,7 @@ public class WebCord {
         databaseProperties.put("javax.persistence.jdbc.user", properties.getDatabaseUsername());
         databaseProperties.put("javax.persistence.jdbc.password", properties.getDatabasePassword());
         databaseProperties.put("show_sql", false);
+        databaseProperties.put("hibernate.jdbc.time_zone", properties.getTimezone().toString());
         LOGGER.info("Propriedades do banco de dados carregadas com sucesso");
         return databaseProperties;
     }
@@ -119,7 +128,7 @@ public class WebCord {
         };
         properties.getWebsites()
                 .forEach((name, url) -> {
-                    webObservers.put(name, new WebObserver(jda, guildInfoService, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url, presenceListener));
+                    webObservers.put(name, new WebObserver(jda, guildInfoService, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url, presenceListener, websiteRecordService, properties.getTimezone()));
                 });
         messageListener.setWebObservers(webObservers);
     }
@@ -148,8 +157,8 @@ public class WebCord {
         }, 0, 1, TimeUnit.HOURS);
     }
 
-    public static void start() {
+    public static void start(String[] args) {
         LOGGER.info("Iniciando WebCord");
-        new WebCord();
+        new WebCord(args);
     }
 }

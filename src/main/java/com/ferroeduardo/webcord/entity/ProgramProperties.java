@@ -2,6 +2,7 @@ package com.ferroeduardo.webcord.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.time.ZoneId;
 import java.util.Map;
 
 public class ProgramProperties {
@@ -12,6 +13,7 @@ public class ProgramProperties {
     private String token;
     private Integer timeoutSeconds;
     private Integer schedulerSeconds;
+    private ZoneId timezone;
     private Map<String, String> websites;
 
     public ProgramProperties() {
@@ -65,6 +67,15 @@ public class ProgramProperties {
         this.schedulerSeconds = schedulerSeconds;
     }
 
+    public ZoneId getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = ZoneId.of(timezone);
+
+    }
+
     public Map<String, String> getWebsites() {
         return websites;
     }
@@ -75,7 +86,7 @@ public class ProgramProperties {
 
     @JsonIgnore
     public boolean isOk() {
-        return databaseName != null && databaseUsername != null && databasePassword != null && token != null && timeoutSeconds != null && schedulerSeconds != null;
+        return databaseName != null && databaseUsername != null && databasePassword != null && token != null && timeoutSeconds != null && schedulerSeconds != null && timezone != null;
     }
 
     @Override
@@ -87,6 +98,7 @@ public class ProgramProperties {
                 ", token='" + token + '\'' +
                 ", timeoutSeconds=" + timeoutSeconds +
                 ", schedulerSeconds=" + schedulerSeconds +
+                ", timezone='" + timezone + '\'' +
                 ", websites=" + websites +
                 '}';
     }

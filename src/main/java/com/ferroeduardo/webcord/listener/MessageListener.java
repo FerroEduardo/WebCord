@@ -17,8 +17,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.NoResultException;
 import java.awt.*;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -92,7 +92,7 @@ public class MessageListener extends ListenerAdapter {
             TextChannel textChannel = event.getTextChannel();
             Member member = event.getMember();
             Guild guild = event.getGuild();
-            boolean isAdmin = member.getRoles().stream().anyMatch(role -> role.hasPermission(Permission.ADMINISTRATOR));
+            boolean isAdmin = member.hasPermission(Permission.ADMINISTRATOR);
             if (content.equals(COMMAND_PREFIX + "add")) {
                 if (isAdmin) {
                     long guildId = guild.getIdLong();
@@ -222,7 +222,7 @@ public class MessageListener extends ListenerAdapter {
         webObservers.forEach((name, webObserver) -> {
             WebsiteStatus currentWebsiteStatus = webObserver.getCurrentWebsiteStatus();
             if (currentWebsiteStatus != WebsiteStatus.NONE) {
-                LocalDateTime latestStatusTime = webObserver.getLatestStatusTime();
+                ZonedDateTime latestStatusTime = webObserver.getLatestStatusTime();
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
                 if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
                     websiteStatusStringBuilder.append(String.format(
