@@ -47,7 +47,7 @@ public class WebCord {
             guildInfoService = new GuildInfoService(databaseProperties);
 
             LOGGER.info("Iniciando MessageListener");
-            MessageListener messageListener = new MessageListener(guildInfoService);
+            MessageListener messageListener = new MessageListener(guildInfoService, properties.getInfos());
 
             LOGGER.info("Inicializando JDA");
             initJDA(messageListener);

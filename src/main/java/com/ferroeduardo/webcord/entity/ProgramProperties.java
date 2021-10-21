@@ -13,6 +13,7 @@ public class ProgramProperties {
     private Integer timeoutSeconds;
     private Integer schedulerSeconds;
     private Map<String, String> websites;
+    private Map<String, String> infos;
 
     public ProgramProperties() {
     }
@@ -71,6 +72,14 @@ public class ProgramProperties {
 
     public void setWebsites(Map<String, String> websites) {
         this.websites = websites;
+    }
+
+    public Map<String, String> getInfos() {
+        return infos;
+    }
+
+    public void setInfos(Map<String, String> infos) {
+        this.infos = infos;
     }
 
     @JsonIgnore
