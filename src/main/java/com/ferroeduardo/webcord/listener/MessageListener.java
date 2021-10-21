@@ -227,10 +227,10 @@ public class MessageListener extends ListenerAdapter {
                 if (currentWebsiteStatus == WebsiteStatus.TIMEOUT) {
                     websiteStatusStringBuilder.append(String.format(
                             """
-                                    "%s:"
-                                    "- Status: %s"
-                                    "- Quantidade de Timeouts: %d"
-                                    "- Desde: %s"
+                                    %s:
+                                    - Status: %s
+                                    - Quantidade de Timeouts: %d
+                                    - Desde: %s
                                                                         
                                     """,
                             name, currentWebsiteStatus.name(), webObserver.getTimeoutCount(), latestStatusTime.format(formatter)));
@@ -246,8 +246,8 @@ public class MessageListener extends ListenerAdapter {
             } else {
                 websiteStatusStringBuilder.append(String.format(
                         """
-                                "%s:" +
-                                "- Status: AGUARDE"
+                                %s:
+                                - Status: AGUARDE
                                                                 
                                 """,
                         name));
