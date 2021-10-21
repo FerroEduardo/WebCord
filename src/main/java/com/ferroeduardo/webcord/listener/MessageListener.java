@@ -28,7 +28,7 @@ import java.util.random.RandomGenerator;
 
 public class MessageListener extends ListenerAdapter {
 
-    public static final String COMMAND_PREFIX = "\\\\";
+    public static final String COMMAND_PREFIX = "\\";
     private static final Logger LOGGER = LogManager.getLogger(MessageListener.class);
     private Map<String, WebObserver> webObservers;
     private Map<String, String> infos;
