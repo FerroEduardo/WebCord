@@ -47,6 +47,22 @@ Para gerar um executável .jar:
 ./gradlew jar
 ```
 
+## Comandos:
+- \help
+- \invite
+- \status
+- \ping
+
+### Somente em Servidores
+- \add
+- \remove
+
+### Slash Commands:
+- /help
+- /invite
+- /status
+- /ping
+
 ## Exemplos:
 
 ![exemplo de uso](/imgs/webcord_example.png)
