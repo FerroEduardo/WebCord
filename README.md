@@ -17,7 +17,7 @@ Se estiver executando um `.jar`, o .json irá ser gerado na mesma pasta.
 Mas es estiver executando pelo `Gradle`, o arquivo será gerado na pasta `build/classes/java/`.  
 Esse arquivo terá as chaves necessárias para acessar o banco de dados Postgres e o token do bot do discord.
 O valor padrão para todas as chaves é `null` e o código só funcionará se os valores forem substituídos.  
-A chave `infos` é opcional e é utilizada para exibir os dados no embed do comando `\\help`
+A chave `infos` é opcional e é utilizada para exibir os dados no embed do comando `\help`
 ```json
 {
   "databaseName" : null,
