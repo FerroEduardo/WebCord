@@ -137,6 +137,8 @@ public class WebCord {
         jda.upsertCommand("ping", "Pong").queue();
         jda.upsertCommand("invite", "Convite do bot").queue();
         jda.upsertCommand("status", "Estado atual dos sites").queue();
+        jda.upsertCommand("add", "Adiciona canal atual para receber avisos").queue();
+        jda.upsertCommand("remove", "Remove canal atual e deixa de receber avisos").queue();
 
         jda.awaitReady();
 
