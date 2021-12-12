@@ -16,6 +16,7 @@ public class GuildInfoService {
     private final EntityManagerFactory factory;
 
     public GuildInfoService(Map<String, Object> databaseProperties) {
+        LOGGER.info("Iniciando GuildInfoService");
         LOGGER.info("Inicializando 'EntityManagerFactory' para persistencia dos dados");
         this.factory = Persistence.createEntityManagerFactory("webcord", databaseProperties);
     }

@@ -36,6 +36,7 @@ public class MessageListener extends ListenerAdapter {
     private GuildInfoService guildInfoService;
 
     public MessageListener(GuildInfoService guildInfoService, @Nullable Map<String, String> infos) {
+        LOGGER.info("Iniciando MessageListener");
         this.guildInfoService = guildInfoService;
         this.randomGenerator =  RandomGenerator.getDefault();
         this.infos = infos;

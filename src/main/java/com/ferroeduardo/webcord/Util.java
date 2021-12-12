@@ -25,6 +25,7 @@ public class Util {
     }
 
     public static void checkDatabaseDataIntegrity(JDA jda, GuildInfoService guildInfoService) {
+        LOGGER.info("Verificando existência de canais cadastrados no banco de dados");
         List<GuildInfo> guilds = guildInfoService.findAll();
         Set<Long> rowsToRemove = new HashSet<>();
         guilds.parallelStream().forEach(guildInfo -> {
