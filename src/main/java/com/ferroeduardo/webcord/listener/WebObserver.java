@@ -110,7 +110,7 @@ public class WebObserver {
         } catch (HttpTimeoutException e) {
             timeoutCount++;
             int neededAttemptsToDetectTimeout = 3;
-            String message = String.format("Timeout (%ds) após %d tentativa(s) de acessar o %s", timeoutSeconds, timeoutCount, websiteName);
+            String message = String.format("Timeout ao tentar acessar o %s", websiteName);
             if (timeoutCount % neededAttemptsToDetectTimeout == 0) {
                 if (currentWebsiteStatus != WebsiteStatus.TIMEOUT) {
                     guilds.parallelStream().forEach(guild -> {
