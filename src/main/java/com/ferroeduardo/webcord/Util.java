@@ -20,11 +20,12 @@ public class Util {
 
     public static String getInviteLink(JDA jda) {
         long clientId = jda.getSelfUser().getIdLong();
-        int permission = Permission.MESSAGE_WRITE.getOffset();
+        int permission = Permission.MESSAGE_SEND.getOffset();
         return String.format("https://discord.com/api/oauth2/authorize?client_id=%d&permissions=%d", clientId, permission) + "&scope=bot%20applications.commands";
     }
 
     public static void checkDatabaseDataIntegrity(JDA jda, GuildInfoService guildInfoService) {
+        LOGGER.info("Verificando existência de canais cadastrados no banco de dados");
         List<GuildInfo> guilds = guildInfoService.findAll();
         Set<Long> rowsToRemove = new HashSet<>();
         guilds.parallelStream().forEach(guildInfo -> {

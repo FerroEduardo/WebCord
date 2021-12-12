@@ -11,6 +11,10 @@ import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -21,10 +25,14 @@ import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.random.RandomGenerator;
+
+import static com.ferroeduardo.webcord.listener.DefaultMessages.*;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -36,6 +44,7 @@ public class MessageListener extends ListenerAdapter {
     private GuildInfoService guildInfoService;
 
     public MessageListener(GuildInfoService guildInfoService, @Nullable Map<String, String> infos) {
+        LOGGER.info("Iniciando MessageListener");
         this.guildInfoService = guildInfoService;
         this.randomGenerator =  RandomGenerator.getDefault();
         this.infos = infos;
@@ -44,7 +53,6 @@ public class MessageListener extends ListenerAdapter {
     public void setWebObservers(Map<String, WebObserver> webObservers) {
         this.webObservers = webObservers;
     }
-
 
     @Override
     public void onMessageReceived(@NotNull MessageReceivedEvent event) {
@@ -75,15 +83,23 @@ public class MessageListener extends ListenerAdapter {
             eb.setColor(new Color((int) (randomGenerator.nextDouble() * 0x1000000)));
             eb.setTitle("Ajuda");
             eb.setDescription(descriptionStringBuilder.toString());
-            msg.reply(eb.build()).queue();
+            MessageAction messageAction = msg.replyEmbeds(eb.build());
+            if (this.infos != null && !this.infos.isEmpty()) {
+                List<Component> componentList = new ArrayList<>(this.infos.size());
+                this.infos.forEach((key, value) -> {
+                    componentList.add(Button.link(value, key));
+                });
+                messageAction.setActionRow(componentList);
+            }
+            messageAction.queue();
         } else if (content.equals(COMMAND_PREFIX + "invite")) {
             msg.reply("Convite: " + Util.getInviteLink(event.getJDA())).queue();
         } else if (content.equals(COMMAND_PREFIX + "status")) {
             if (webObservers == null) {
-                msg.reply("Aguarde um momento...").queue(deleteMessagesAfterTime);
+                msg.reply(WAIT_A_MOMENT.getMessage()).queue(deleteMessagesAfterTime);
             } else {
                 if (webObservers.isEmpty()) {
-                    msg.reply("Nenhum site foi cadastrado no bot").queue();
+                    msg.reply(NO_WEBSITE_REGISTERED.getMessage()).queue();
                 } else {
                     MessageBuilder mb = getWebObserversStatusMessageBuilder(event.getMessage().getTimeCreated());
                     msg.reply(mb.build()).queue();
@@ -100,43 +116,19 @@ public class MessageListener extends ListenerAdapter {
                 if (isAdmin) {
                     long guildId = guild.getIdLong();
                     long channelId = textChannel.getIdLong();
-                    try {
-                        GuildInfo guildInfo = guildInfoService.find(guildId, channelId);
-                        if (guildInfo != null) {
-                            throw LOGGER.throwing(new AlreadyExistsException("Canal já foi adicionado anteriormente"));
-                        }
-                    } catch (NoResultException e) {
-                        LOGGER.trace(String.format("Nenhum canal foi encontrado, cadastrando canal '%d' do servidor '%d' no banco de dados", channelId, guildId), e);
-                        guildInfoService.save(new GuildInfo(guildId, channelId));
-                        msg.reply("Configurado com sucesso").queue(deleteMessagesAfterTime);
-                    } catch (AlreadyExistsException e) {
-                        LOGGER.debug(e);
-                        msg.reply(e.getMessage()).queue(deleteMessagesAfterTime);
-                    } catch (Exception e) {
-                        LOGGER.warn(e);
-                        msg.reply("Ocorreu uma falha ao adicionar o canal").queue(deleteMessagesAfterTime);
-                    }
+                    String message = addChannelToTheDatabase(guildId, channelId);
+                    msg.reply(message).queue(deleteMessagesAfterTime);
                 } else {
-                    msg.reply("Você não é um administrador para realizar essa ação").queue(deleteMessagesAfterTime);
+                    msg.reply(USER_IS_NOT_ADMIN.getMessage()).queue(deleteMessagesAfterTime);
                 }
             } else if (content.equals(COMMAND_PREFIX + "remove")) {
                 if (isAdmin) {
                     long guildId = guild.getIdLong();
                     long channelId = textChannel.getIdLong();
-                    try {
-                        guildInfoService.delete(guildId, channelId);
-                        msg.reply("Canal removido com sucesso").queue(deleteMessagesAfterTime);
-                    } catch (NoResultException e) {
-                        String message = "Parece que esse canal não está cadastrado para poder ser removido";
-                        LOGGER.debug(message, e);
-                        msg.reply(message).queue(deleteMessagesAfterTime);
-                    } catch (Exception e) {
-                        String message = "Ocorreu uma falha ao remover o canal";
-                        LOGGER.warn(message, e);
-                        msg.reply(message).queue(deleteMessagesAfterTime);
-                    }
+                    String message = removeChannelFromDatabase(guildId, channelId);
+                    msg.reply(message).queue(deleteMessagesAfterTime);
                 } else {
-                    msg.reply("Você não é um administrador para poder realizar essa ação").queue(deleteMessagesAfterTime);
+                    msg.reply(USER_IS_NOT_ADMIN.getMessage()).queue(deleteMessagesAfterTime);
                 }
             }
         }
@@ -191,7 +183,15 @@ public class MessageListener extends ListenerAdapter {
             eb.setTitle("Ajuda");
             eb.setDescription(descriptionStringBuilder.toString());
             MessageBuilder mb = new MessageBuilder(eb);
-            event.reply(mb.build()).queue();
+            ReplyAction replyAction = event.reply(mb.build());
+            if (this.infos != null && !this.infos.isEmpty()) {
+                List<Component> componentList = new ArrayList<>(this.infos.size());
+                this.infos.forEach((key, value) -> {
+                    componentList.add(Button.link(value, key));
+                });
+                replyAction.addActionRow(componentList);
+            }
+            replyAction.queue();
         } else if (eventName.equals("ping")) {
             long time = System.currentTimeMillis();
             event.reply("Pong!")
@@ -202,19 +202,46 @@ public class MessageListener extends ListenerAdapter {
             event.reply(Util.getInviteLink(event.getJDA())).queue();
         } else if (eventName.equals("status")) {
             if (webObservers == null) {
-                event.reply("Aguarde um momento...").queue();
+                event.reply(WAIT_A_MOMENT.getMessage()).queue();
             } else {
                 if (webObservers.isEmpty()) {
-                    event.reply("Nenhum site foi cadastrado no bot").queue();
+                    event.reply(NO_WEBSITE_REGISTERED.getMessage()).queue();
                 } else {
                     MessageBuilder mb = getWebObserversStatusMessageBuilder(event.getTimeCreated());
                     event.reply(mb.build()).queue();
                 }
             }
         }
+        if (event.getChannelType() == ChannelType.TEXT) {
+            if (eventName.equals("add")) {
+                Member member = event.getMember();
+                boolean isAdmin = member.getRoles().stream().anyMatch(role -> role.hasPermission(Permission.ADMINISTRATOR));
+                if (isAdmin) {
+                    long channelId = event.getChannel().getIdLong();
+                    long guildId = event.getGuild().getIdLong();
+                    String message = addChannelToTheDatabase(guildId, channelId);
+                    event.reply(message).queue();
+                } else {
+                    event.reply(USER_IS_NOT_ADMIN.getMessage()).queue();
+                }
+            } else if (eventName.equals("remove")) {
+                Member member = event.getMember();
+                boolean isAdmin = member.getRoles().stream().anyMatch(role -> role.hasPermission(Permission.ADMINISTRATOR));
+                if (isAdmin) {
+                    long channelId = event.getChannel().getIdLong();
+                    long guildId = event.getGuild().getIdLong();
+                    String message = removeChannelFromDatabase(guildId, channelId);
+                    event.reply(message).queue();
+                } else {
+                    event.reply(USER_IS_NOT_ADMIN.getMessage()).queue();
+                }
+            }
+        } else {
+            event.reply("Esse comando só está disponível em canais de servidores").queue();
+        }
     }
 
-    private MessageBuilder getWebObserversStatusMessageBuilder(OffsetDateTime timeCreated) {
+    private MessageBuilder getWebObserversStatusMessageBuilder(@Nullable OffsetDateTime timeCreated) {
         StringBuilder websiteStatusStringBuilder = getWebObserversStatusStringBuilder();
         EmbedBuilder eb = new EmbedBuilder();
         eb.setTimestamp(timeCreated);
@@ -261,5 +288,42 @@ public class MessageListener extends ListenerAdapter {
             }
         });
         return websiteStatusStringBuilder;
+    }
+
+    private String addChannelToTheDatabase(long guildId, long channelId) {
+        String message;
+        try {
+            GuildInfo guildInfo = guildInfoService.find(guildId, channelId);
+            if (guildInfo != null) {
+                throw LOGGER.throwing(new AlreadyExistsException(ALREADY_ADDED_CHANNEL.getMessage()));
+            }
+            message = "Era pra essa mensagem ser impossível de aparecer. Entre em contato com o desenvolvedor ou administrador";
+        } catch (NoResultException e) {
+            LOGGER.trace(String.format("Nenhum canal foi encontrado, cadastrando canal '%d' do servidor '%d' no banco de dados", channelId, guildId), e);
+            guildInfoService.save(new GuildInfo(guildId, channelId));
+            message = CONFIGURED_WITH_SUCCESS.getMessage();
+        } catch (AlreadyExistsException e) {
+            LOGGER.debug(e);
+            message = e.getMessage();
+        } catch (Exception e) {
+            LOGGER.warn(e);
+            message = FAILED_TO_REMOVE_CHANNEL.getMessage();
+        }
+        return message;
+    }
+
+    private String removeChannelFromDatabase(long guildId, long channelId) {
+        String message;
+        try {
+            guildInfoService.delete(guildId, channelId);
+            message = CHANNEL_REMOVED_WITH_SUCCESS.getMessage();
+        } catch (NoResultException e) {
+            message = CHANNEL_NOT_REGISTERED_TO_BE_REMOVED.getMessage();
+            LOGGER.debug(message, e);
+        } catch (Exception e) {
+            message = FAILED_TO_REMOVE_CHANNEL.getMessage();
+            LOGGER.warn(message, e);
+        }
+        return message;
     }
 }
