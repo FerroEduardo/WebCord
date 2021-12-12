@@ -75,7 +75,7 @@ public class MessageListener extends ListenerAdapter {
             eb.setColor(new Color((int) (randomGenerator.nextDouble() * 0x1000000)));
             eb.setTitle("Ajuda");
             eb.setDescription(descriptionStringBuilder.toString());
-            msg.reply(eb.build()).queue();
+            msg.replyEmbeds(eb.build()).queue();
         } else if (content.equals(COMMAND_PREFIX + "invite")) {
             msg.reply("Convite: " + Util.getInviteLink(event.getJDA())).queue();
         } else if (content.equals(COMMAND_PREFIX + "status")) {
