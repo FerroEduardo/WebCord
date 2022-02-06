@@ -5,6 +5,8 @@ import com.ferroeduardo.webcord.exception.TextChannelNotFoundExists;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import javax.persistence.*;
 import java.util.Optional;
@@ -12,6 +14,8 @@ import java.util.Optional;
 @Entity
 @Table(name = "guilds")
 public class GuildInfo {
+
+    private static final Logger LOGGER = LogManager.getLogger(GuildInfo.class);
 
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
@@ -71,11 +75,9 @@ public class GuildInfo {
                     new TextChannelNotFoundExists(String.format("TextChannel '%d' not found in Guild '%d'", guildChannelId, guildId))
             ).sendMessage(message).queue();
         } catch (GuildNotFoundException e) {
-            e.printStackTrace();
-            System.out.printf("Failed to send message to Guild '%d' because this Guild does not exists anymore%n", guildId);
+            LOGGER.debug(String.format("Failed to send message to Guild '%d' because this Guild does not exists anymore%n", guildId), e);
         } catch (TextChannelNotFoundExists e) {
-            e.printStackTrace();
-            System.out.printf("Failed to send message to Guild '%d' and TextChannel '%d' because this TextChannel does not exists anymore%n", guildId, guildChannelId);
+            LOGGER.debug(String.format("Failed to send message to Guild '%d' and TextChannel '%d' because this TextChannel does not exists anymore%n", guildId, guildChannelId), e);
         }
     }
 
