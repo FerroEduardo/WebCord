@@ -32,9 +32,10 @@ public class WebObserver {
     private final int schedulerTimeRate;
     private LocalDateTime latestStatusTime;
     private final UpdatePresenceListener presenceListener;
+    private final int timeoutDetection;
     private final GuildInfoService guildInfoService;
 
-    public WebObserver(JDA jda, GuildInfoService guildInfoService, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url, UpdatePresenceListener presenceListener) {
+    public WebObserver(JDA jda, GuildInfoService guildInfoService, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url, UpdatePresenceListener presenceListener, int timeoutDetection) {
         this.jda = jda;
         this.guildInfoService = guildInfoService;
         this.timeoutSeconds = timeoutSeconds;
@@ -42,6 +43,7 @@ public class WebObserver {
         this.websiteName = websiteName;
         this.url = url;
         this.presenceListener = presenceListener;
+        this.timeoutDetection = timeoutDetection;
         this.timeoutCount = 0;
         this.currentWebsiteStatus = WebsiteStatus.NONE;
         LOGGER.info(String.format("WebObserver '%s' inicializado", websiteName));
@@ -109,9 +111,8 @@ public class WebObserver {
             LOGGER.error(String.format("URI do %s está incorreta", websiteName), e);
         } catch (HttpTimeoutException e) {
             timeoutCount++;
-            int neededAttemptsToDetectTimeout = 3;
             String message = String.format("Timeout ao tentar acessar o %s", websiteName);
-            if (timeoutCount % neededAttemptsToDetectTimeout == 0) {
+            if (timeoutCount % timeoutDetection == 0) {
                 if (currentWebsiteStatus != WebsiteStatus.TIMEOUT) {
                     guilds.parallelStream().forEach(guild -> {
                         guild.sendMessage(jda, message);

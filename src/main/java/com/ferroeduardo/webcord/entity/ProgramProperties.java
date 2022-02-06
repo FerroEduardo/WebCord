@@ -14,6 +14,7 @@ public class ProgramProperties {
     private Integer schedulerSeconds;
     private Map<String, String> websites;
     private Map<String, String> infos;
+    private Integer timeoutDetection;
 
     public ProgramProperties() {
     }
@@ -80,6 +81,14 @@ public class ProgramProperties {
 
     public void setInfos(Map<String, String> infos) {
         this.infos = infos;
+    }
+
+    public Integer getTimeoutDetection() {
+        return timeoutDetection;
+    }
+
+    public void setTimeoutDetection(Integer timeoutDetection) {
+        this.timeoutDetection = timeoutDetection;
     }
 
     @JsonIgnore

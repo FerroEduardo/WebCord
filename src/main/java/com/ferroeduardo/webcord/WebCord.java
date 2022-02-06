@@ -34,6 +34,7 @@ public class WebCord {
 
     private JDA jda;
     private ProgramProperties properties;
+    private final ScheduledExecutorService checkDatabaseDataIntegrityScheduler = Executors.newScheduledThreadPool(1);
 
     private WebCord() {
         try {
@@ -47,7 +48,9 @@ public class WebCord {
 
             initJDA(messageListener);
 
-            Util.checkDatabaseDataIntegrity(jda, guildInfoService);
+            checkDatabaseDataIntegrityScheduler.scheduleAtFixedRate(() -> {
+                Util.checkDatabaseDataIntegrity(jda, guildInfoService);
+            }, 0, 1, TimeUnit.HOURS);
 
             initWebObservers(messageListener);
         } catch (LoginException e) {
@@ -117,7 +120,7 @@ public class WebCord {
         };
         properties.getWebsites()
                 .forEach((name, url) -> {
-                    webObservers.put(name, new WebObserver(jda, guildInfoService, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url, presenceListener));
+                    webObservers.put(name, new WebObserver(jda, guildInfoService, properties.getTimeoutSeconds(), properties.getSchedulerSeconds(), name, url, presenceListener, properties.getTimeoutDetection()));
                 });
         messageListener.setWebObservers(webObservers);
     }

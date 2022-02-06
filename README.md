@@ -26,6 +26,7 @@ A chave `infos` é opcional e é utilizada para exibir os dados no embed do coma
   "token" : null,
   "timeoutSeconds" : null,
   "schedulerSeconds" : null,
+  "timeoutDetection": 3,
   "websites": {
     "nome_do_site" : "url_do_site",
     "nome_de_outro_site" : "url_de_outro_site"
