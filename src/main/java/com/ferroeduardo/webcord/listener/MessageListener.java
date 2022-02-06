@@ -8,17 +8,17 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.dv8tion.jda.api.interactions.components.Component;
+import net.dv8tion.jda.api.interactions.components.ItemComponent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
-import net.dv8tion.jda.api.requests.restaction.interactions.ReplyAction;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.persistence.NoResultException;
 import java.awt.*;
@@ -55,7 +55,7 @@ public class MessageListener extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
+    public void onMessageReceived(@Nonnull MessageReceivedEvent event) {
         if (event.getAuthor().isBot()) {
             return;
         }
@@ -85,7 +85,7 @@ public class MessageListener extends ListenerAdapter {
             eb.setDescription(descriptionStringBuilder.toString());
             MessageAction messageAction = msg.replyEmbeds(eb.build());
             if (this.infos != null && !this.infos.isEmpty()) {
-                List<Component> componentList = new ArrayList<>(this.infos.size());
+                List<ItemComponent> componentList = new ArrayList<>(this.infos.size());
                 this.infos.forEach((key, value) -> {
                     componentList.add(Button.link(value, key));
                 });
@@ -173,7 +173,7 @@ public class MessageListener extends ListenerAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommandInteraction(@Nonnull SlashCommandInteractionEvent event) {
         String eventName = event.getName();
         if (eventName.equals("help")) {
             StringBuilder descriptionStringBuilder = getHelpStringBuilder();
@@ -183,9 +183,9 @@ public class MessageListener extends ListenerAdapter {
             eb.setTitle("Ajuda");
             eb.setDescription(descriptionStringBuilder.toString());
             MessageBuilder mb = new MessageBuilder(eb);
-            ReplyAction replyAction = event.reply(mb.build());
+            ReplyCallbackAction replyAction = event.reply(mb.build());
             if (this.infos != null && !this.infos.isEmpty()) {
-                List<Component> componentList = new ArrayList<>(this.infos.size());
+                List<ItemComponent> componentList = new ArrayList<>(this.infos.size());
                 this.infos.forEach((key, value) -> {
                     componentList.add(Button.link(value, key));
                 });

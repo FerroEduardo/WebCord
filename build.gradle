@@ -24,15 +24,15 @@ application {
 dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-    implementation ("net.dv8tion:JDA:5.0.0-alpha.2") {
+    implementation ("net.dv8tion:JDA:5.0.0-alpha.5") {
         exclude module: 'opus-java'
     }
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
     implementation 'org.postgresql:postgresql:42.3.1'
-    implementation 'org.hibernate:hibernate-core:5.6.1.Final'
-    implementation 'org.apache.logging.log4j:log4j:2.15.0'
-    implementation 'org.apache.logging.log4j:log4j-core:2.15.0'
-    implementation 'org.slf4j:slf4j-log4j12:1.7.32'
+    implementation 'org.hibernate:hibernate-core:5.6.5.Final'
+    implementation 'org.apache.logging.log4j:log4j:2.17.1'
+    implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
+    implementation 'org.slf4j:slf4j-reload4j:1.7.35'
 }
 
 configurations.all {
