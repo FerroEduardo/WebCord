@@ -6,6 +6,7 @@ import net.dv8tion.jda.api.JDA;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -34,6 +35,8 @@ public class WebObserver {
     private final UpdatePresenceListener presenceListener;
     private final int timeoutDetection;
     private final GuildInfoService guildInfoService;
+
+    private Exception exception = new Exception("");
 
     public WebObserver(JDA jda, GuildInfoService guildInfoService, int timeoutSeconds, int schedulerTimeRate, String websiteName, String url, UpdatePresenceListener presenceListener, int timeoutDetection) {
         this.jda = jda;
@@ -122,13 +125,35 @@ public class WebObserver {
                 }
             }
             LOGGER.debug(message, e);
+        } catch (IOException e) {
+            timeoutCount++;
+            String message = String.format(
+                    e.getMessage().equals("Network is unreachable") ?
+                            "O %s está inacessível":
+                            "Falha ao tentar estabelecer uma conexão com %s",
+                    websiteName);
+            if (timeoutCount % timeoutDetection == 0) {
+                if (currentWebsiteStatus != WebsiteStatus.CONNECTION_ERROR) {
+                    guilds.parallelStream().forEach(guild -> {
+                        guild.sendMessage(jda, message);
+                    });
+                    currentWebsiteStatus = WebsiteStatus.CONNECTION_ERROR;
+                    latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
+                }
+            }
+            LOGGER.debug(message, e);
         } catch (Exception e) {
             String message = String.format("Ocorreu algo inesperado ao tentar acessar o %s", websiteName);
             LOGGER.error(message, e);
-            guilds.parallelStream().forEach(guild -> {
-                guild.sendMessage(jda, message);
-            });
-            currentWebsiteStatus = WebsiteStatus.ERROR;
+            boolean isSameExceptionClass = e.getClass().equals(this.exception.getClass());
+            boolean isSameExceptionMessageHashCode = e.getMessage().hashCode() == this.exception.getMessage().hashCode();
+            if (!isSameExceptionClass || !isSameExceptionMessageHashCode || currentWebsiteStatus != WebsiteStatus.ERROR) {
+                guilds.parallelStream().forEach(guild -> {
+                    guild.sendMessage(jda, message);
+                });
+                currentWebsiteStatus = WebsiteStatus.ERROR;
+            }
+            this.exception = e;
             latestStatusTime = LocalDateTime.now(ZoneId.of("GMT-3"));
         }
         presenceListener.updatePresence();
