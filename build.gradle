@@ -27,12 +27,11 @@ dependencies {
     implementation ("net.dv8tion:JDA:5.0.0-alpha.5") {
         exclude module: 'opus-java'
     }
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.1'
-    implementation 'org.postgresql:postgresql:42.3.1'
-    implementation 'org.hibernate:hibernate-core:5.6.5.Final'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.1'
+    implementation 'org.postgresql:postgresql:42.3.3'
+    implementation 'org.hibernate:hibernate-core:5.6.7.Final'
     implementation 'org.apache.logging.log4j:log4j:2.17.1'
     implementation 'org.apache.logging.log4j:log4j-core:2.17.1'
-    implementation 'org.slf4j:slf4j-reload4j:1.7.35'
 }
 
 configurations.all {
