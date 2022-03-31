@@ -2,7 +2,10 @@ package com.ferroeduardo.webcord;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ferroeduardo.webcord.entity.ProgramProperties;
-import com.ferroeduardo.webcord.listener.*;
+import com.ferroeduardo.webcord.listener.MessageListener;
+import com.ferroeduardo.webcord.listener.ReadyListener;
+import com.ferroeduardo.webcord.listener.UpdatePresenceListener;
+import com.ferroeduardo.webcord.listener.WebObserver;
 import com.ferroeduardo.webcord.service.GuildInfoService;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -109,12 +112,12 @@ public class WebCord {
             boolean isSomethingWrong = webObservers.values()
                     .parallelStream()
                     .map(WebObserver::getCurrentWebsiteStatus)
-                    .anyMatch(websiteStatus -> websiteStatus.equals(WebsiteStatus.ERROR) || websiteStatus.equals(WebsiteStatus.TIMEOUT));
+                    .anyMatch(websiteStatus -> websiteStatus.status == OnlineStatus.DO_NOT_DISTURB);
             Presence presence = jda.getPresence();
             if (isSomethingWrong) {
-                presence.setStatus(WebsiteStatus.ERROR.status);
+                presence.setStatus(OnlineStatus.DO_NOT_DISTURB);
             } else {
-                presence.setStatus(WebsiteStatus.ONLINE.status);
+                presence.setStatus(OnlineStatus.ONLINE);
             }
             LOGGER.trace("Atualizando presença para " + presence.getStatus().name());
         };
